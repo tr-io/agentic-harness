@@ -22,11 +22,6 @@
     }
   },
   "files": {
-    "ignore": [
-      "dist/**",
-      "node_modules/**",
-      ".claude/hooks/**",
-      ".ai/**"
-    ]
+    "ignore": ["dist/**", "node_modules/**", ".claude/hooks/**", ".ai/**"]
   }
 }

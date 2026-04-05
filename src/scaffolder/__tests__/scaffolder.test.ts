@@ -116,7 +116,7 @@ describe("scaffold", () => {
   it("writes all files to target directory", () => {
     const result = scaffold(dir, baseConfig, baseStack);
     expect(result.files.length).toBeGreaterThan(0);
-    
+
     for (const f of result.files) {
       expect(existsSync(join(dir, f.path))).toBe(true);
     }
@@ -125,7 +125,7 @@ describe("scaffold", () => {
   it("dry-run returns file list without writing", () => {
     const result = scaffold(dir, baseConfig, baseStack, { dryRun: true });
     expect(result.files.length).toBeGreaterThan(0);
-    
+
     for (const f of result.files) {
       expect(existsSync(join(dir, f.path))).toBe(false);
     }
