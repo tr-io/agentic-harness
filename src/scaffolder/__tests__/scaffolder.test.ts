@@ -116,20 +116,19 @@ describe("scaffold", () => {
   it("writes all files to target directory", () => {
     const result = scaffold(dir, baseConfig, baseStack);
     expect(result.files.length).toBeGreaterThan(0);
-    result.files.forEach((f) => {
-      const { existsSync } = require("node:fs");
+    const { existsSync } = require("node:fs");
+    for (const f of result.files) {
       expect(existsSync(join(dir, f.path))).toBe(true);
-    });
+    }
   });
 
   it("dry-run returns file list without writing", () => {
     const result = scaffold(dir, baseConfig, baseStack, { dryRun: true });
     expect(result.files.length).toBeGreaterThan(0);
-    // No files should actually exist
     const { existsSync } = require("node:fs");
-    result.files.forEach((f) => {
+    for (const f of result.files) {
       expect(existsSync(join(dir, f.path))).toBe(false);
-    });
+    }
   });
 
   it("skips existing files when skipExisting is true", () => {

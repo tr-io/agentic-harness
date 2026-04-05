@@ -1,17 +1,10 @@
+import { spawnSync } from "node:child_process";
 /**
  * TRI-45: Sub-agent codebase analysis for existing projects
  * TRI-46: Existing config detection, preservation, and merge
  */
-import {
-  existsSync,
-  mkdirSync,
-  readFileSync,
-  readdirSync,
-  statSync,
-  writeFileSync,
-} from "node:fs";
+import { existsSync, mkdirSync, readFileSync, readdirSync, statSync, writeFileSync } from "node:fs";
 import { join, relative } from "node:path";
-import { spawnSync } from "node:child_process";
 import type { HarnessConfig } from "../config/types.js";
 import type { StackReport } from "../detector/types.js";
 
@@ -59,14 +52,9 @@ export function mergeClaudeSettings(
     const existing_ = (mergedHooks[event] ?? []) as Array<{
       hooks?: Array<{ command?: string }>;
     }>;
-    const existingCommands = new Set(
-      existing_.flatMap((e) => e.hooks ?? []).map((h) => h.command),
-    );
-    const newEntries = (
-      harnessEntries as Array<{ hooks?: Array<{ command?: string }> }>
-    ).filter(
-      (entry) =>
-        !(entry.hooks ?? []).every((h) => h.command && existingCommands.has(h.command)),
+    const existingCommands = new Set(existing_.flatMap((e) => e.hooks ?? []).map((h) => h.command));
+    const newEntries = (harnessEntries as Array<{ hooks?: Array<{ command?: string }> }>).filter(
+      (entry) => !(entry.hooks ?? []).every((h) => h.command && existingCommands.has(h.command)),
     );
     mergedHooks[event] = [...existing_, ...newEntries];
   }
@@ -102,7 +90,7 @@ function gatherDirectoryTree(dir: string, maxDepth = 3, prefix = ""): string {
     }
     lines.push(`${prefix}${isDir ? "📁" : "📄"} ${entry}`);
     if (isDir && maxDepth > 1) {
-      const sub = gatherDirectoryTree(full, maxDepth - 1, prefix + "  ");
+      const sub = gatherDirectoryTree(full, maxDepth - 1, `${prefix}  `);
       if (sub) lines.push(sub);
     }
   }
@@ -199,7 +187,9 @@ export function writeSubAgentOutputs(dir: string, outputs: SubAgentOutput): stri
     if (existsSync(manifestPath)) {
       try {
         manifest = JSON.parse(readFileSync(manifestPath, "utf-8"));
-      } catch { /* use default */ }
+      } catch {
+        /* use default */
+      }
     }
     manifest.mappings = outputs.manifestMappings;
     manifest.generatedAt = new Date().toISOString();

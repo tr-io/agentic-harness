@@ -1,17 +1,17 @@
 import { existsSync, readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
-import { detectStack } from "../detector/index.js";
+import { scaffoldCiWorkflow } from "../ci/index.js";
 import { CONFIG_DEFAULTS } from "../config/defaults.js";
 import type { HarnessConfig } from "../config/types.js";
-import { scaffold } from "../scaffolder/index.js";
+import { detectStack } from "../detector/index.js";
 import type { StackReport } from "../detector/types.js";
 import {
+  analyzeCodebaseWithSubAgent,
   detectExistingConfigs,
   mergeClaudeSettings,
-  analyzeCodebaseWithSubAgent,
   writeSubAgentOutputs,
 } from "../existing-init/index.js";
-import { scaffoldCiWorkflow } from "../ci/index.js";
+import { scaffold } from "../scaffolder/index.js";
 
 interface InitOptions {
   dryRun?: boolean;
@@ -31,7 +31,7 @@ function isGreenfield(dir: string): boolean {
 
 async function promptUser(stack: StackReport): Promise<HarnessConfig> {
   const { default: inquirer } = await import("inquirer");
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // biome-ignore lint/suspicious/noExplicitAny: inquirer v13 prompt() type is overly strict
   const answers = await (inquirer.prompt as any)([
     { type: "input", name: "name", message: "Project name:", default: "my-project" },
     {
@@ -41,8 +41,18 @@ async function promptUser(stack: StackReport): Promise<HarnessConfig> {
       choices: ["web-app", "cli", "library", "monorepo", "mobile"],
       default: stack.projectType,
     },
-    { type: "input", name: "testCommand", message: "Test command:", default: guessTestCommand(stack) },
-    { type: "input", name: "lintCommand", message: "Lint command:", default: guessLintCommand(stack) },
+    {
+      type: "input",
+      name: "testCommand",
+      message: "Test command:",
+      default: guessTestCommand(stack),
+    },
+    {
+      type: "input",
+      name: "lintCommand",
+      message: "Lint command:",
+      default: guessLintCommand(stack),
+    },
     {
       type: "input",
       name: "typeCheckCommand",
@@ -50,7 +60,12 @@ async function promptUser(stack: StackReport): Promise<HarnessConfig> {
       default: stack.languages.includes("typescript") ? "npx tsc --noEmit" : "",
     },
     { type: "input", name: "buildCommand", message: "Build command:", default: "npm run build" },
-    { type: "confirm", name: "linearEnabled", message: "Enable Linear integration?", default: false },
+    {
+      type: "confirm",
+      name: "linearEnabled",
+      message: "Enable Linear integration?",
+      default: false,
+    },
     {
       type: "input",
       name: "linearTeamKey",
@@ -151,7 +166,9 @@ export async function runInit(options: InitOptions): Promise<void> {
   const greenfield = isGreenfield(cwd);
   const existing = detectExistingConfigs(cwd);
 
-  console.log(`  Type: ${stack.projectType} | Stack: ${[...stack.languages, ...stack.frameworks].join(", ") || "unknown"}`);
+  console.log(
+    `  Type: ${stack.projectType} | Stack: ${[...stack.languages, ...stack.frameworks].join(", ") || "unknown"}`,
+  );
 
   if (!greenfield) {
     console.log("  Existing project detected.");
@@ -187,7 +204,9 @@ export async function runInit(options: InitOptions): Promise<void> {
         const merged = mergeClaudeSettings(existingSettings, harnessSettings);
         writeFileSync(settingsPath, JSON.stringify(merged, null, 2));
         console.log("  ✓ Merged .claude/settings.json");
-      } catch { /* use scaffolded version */ }
+      } catch {
+        /* use scaffolded version */
+      }
     }
 
     // Sub-agent analysis for existing projects

@@ -1,7 +1,7 @@
 import type { TemplateContext } from "../../types.js";
 
 export function claudeSettings(ctx: TemplateContext): string {
-  const hooks: Record<string, unknown[]> = {
+  const hooks: Record<string, unknown[] | undefined> = {
     PreToolUse: [
       {
         matcher: "Bash",
@@ -53,8 +53,8 @@ export function claudeSettings(ctx: TemplateContext): string {
   }
 
   // Remove empty arrays
-  if (hooks.PostToolUse.length === 0) delete hooks.PostToolUse;
-  if (hooks.Stop.length === 0) delete hooks.Stop;
+  if ((hooks.PostToolUse as unknown[]).length === 0) hooks.PostToolUse = undefined;
+  if ((hooks.Stop as unknown[]).length === 0) hooks.Stop = undefined;
 
   return JSON.stringify({ hooks }, null, 2);
 }

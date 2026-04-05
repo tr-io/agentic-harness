@@ -135,7 +135,9 @@ export function scaffoldCiWorkflow(
       if (existing.length > 0) {
         return { created: false, path: join(workflowDir, existing[0]) };
       }
-    } catch { /* continue */ }
+    } catch {
+      /* continue */
+    }
   }
 
   const content = generateCiWorkflow(config, stack);

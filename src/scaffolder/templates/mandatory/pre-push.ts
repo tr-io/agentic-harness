@@ -5,9 +5,7 @@ export function prePush(ctx: TemplateContext): string {
   const typeLine = ctx.typeCheckCommand
     ? `- [ ] \`${ctx.typeCheckCommand}\` passes`
     : "- [ ] Type check passes";
-  const testLine = ctx.testCommand
-    ? `- [ ] \`${ctx.testCommand}\` passes`
-    : "- [ ] Tests pass";
+  const testLine = ctx.testCommand ? `- [ ] \`${ctx.testCommand}\` passes` : "- [ ] Tests pass";
   const linearStatus = ctx.features.linearIntegration
     ? "\n- [ ] Linear ticket status updated to **In Review**"
     : "";

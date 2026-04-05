@@ -17,9 +17,7 @@
     "lint:fix": "biome check --write src",
     "prepublishOnly": "npm run build"
   },
-  "files": [
-    "dist"
-  ],
+  "files": ["dist"],
   "dependencies": {
     "commander": "^12.1.0",
     "inquirer": "^13.3.2"

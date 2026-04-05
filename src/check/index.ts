@@ -59,7 +59,11 @@ export async function runCheck(): Promise<void> {
   results.push(checkFile(cwd, "CLAUDE.md", "CLAUDE.md"));
   results.push(checkFile(cwd, ".ai/README.md", ".ai/README.md"));
   results.push(
-    checkFile(cwd, ".ai/agent-instructions/session-protocol.md", ".ai/agent-instructions/session-protocol.md"),
+    checkFile(
+      cwd,
+      ".ai/agent-instructions/session-protocol.md",
+      ".ai/agent-instructions/session-protocol.md",
+    ),
   );
   results.push(
     checkFile(cwd, ".ai/agent-instructions/pre-plan.md", ".ai/agent-instructions/pre-plan.md"),
@@ -80,7 +84,12 @@ export async function runCheck(): Promise<void> {
     if (lines <= 100) {
       results.push(pass("CLAUDE.md line count", `${lines} lines (≤100 ✓)`));
     } else {
-      results.push(warn("CLAUDE.md line count", `${lines} lines — exceeds ~100 line target. Consider moving details to .ai/ subdocs.`));
+      results.push(
+        warn(
+          "CLAUDE.md line count",
+          `${lines} lines — exceeds ~100 line target. Consider moving details to .ai/ subdocs.`,
+        ),
+      );
     }
   }
 
@@ -89,13 +98,19 @@ export async function runCheck(): Promise<void> {
     if (config.features.adr) {
       const r = existsSync(join(cwd, ".ai/adr/README.md"))
         ? pass(".ai/adr/README.md")
-        : warn(".ai/adr/README.md", "adr feature enabled but .ai/adr/README.md missing — run harness init");
+        : warn(
+            ".ai/adr/README.md",
+            "adr feature enabled but .ai/adr/README.md missing — run harness init",
+          );
       results.push(r);
     }
     if (config.features.testingDocs) {
       const r = existsSync(join(cwd, ".ai/testing/conventions.md"))
         ? pass(".ai/testing/conventions.md")
-        : warn(".ai/testing/conventions.md", "testingDocs feature enabled but file missing — run harness init");
+        : warn(
+            ".ai/testing/conventions.md",
+            "testingDocs feature enabled but file missing — run harness init",
+          );
       results.push(r);
     }
 
@@ -109,7 +124,9 @@ export async function runCheck(): Promise<void> {
       if (config.features[feature as keyof typeof config.features]) {
         const hookPath = join(cwd, rel);
         if (!existsSync(hookPath)) {
-          results.push(warn(rel, `Feature ${feature} enabled but hook script missing — run harness init`));
+          results.push(
+            warn(rel, `Feature ${feature} enabled but hook script missing — run harness init`),
+          );
         } else {
           results.push(pass(rel));
         }
@@ -123,7 +140,12 @@ export async function runCheck(): Promise<void> {
     ];
     for (const [cmd, name] of commands) {
       if (!cmd) {
-        results.push(warn(name, `${name} not configured in .harness.json — pre-push hook will skip this check`));
+        results.push(
+          warn(
+            name,
+            `${name} not configured in .harness.json — pre-push hook will skip this check`,
+          ),
+        );
       } else {
         results.push(pass(name, cmd));
       }

@@ -4,13 +4,8 @@
   "project": {
     "name": "@tr-io/harness",
     "type": "cli",
-    "stacks": [
-      "typescript"
-    ],
-    "entryPoints": [
-      "./dist/cli.js",
-      "src/cli.ts"
-    ],
+    "stacks": ["typescript"],
+    "entryPoints": ["./dist/cli.js", "src/cli.ts"],
     "testCommand": "npm test",
     "lintCommand": "npx biome check .",
     "typeCheckCommand": "npx tsc --noEmit",
