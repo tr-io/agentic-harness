@@ -16,7 +16,7 @@ export function generateCiWorkflow(config: HarnessConfig, stack: StackReport): s
           node-version: '20'
           cache: '${stack.packageManager ?? "npm"}'`,
       `      - name: Install dependencies
-        run: ${stack.packageManager === "pnpm" ? "pnpm install --frozen-lockfile" : stack.packageManager === "bun" ? "bun install" : "npm ci"}`,
+        run: ${stack.packageManager === "pnpm" ? "pnpm install --frozen-lockfile" : stack.packageManager === "bun" ? "bun install" : "npm install"}`,
     );
   }
 
