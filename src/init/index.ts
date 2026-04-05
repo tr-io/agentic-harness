@@ -1,36 +1,39 @@
-import { existsSync, writeFileSync } from "node:fs";
+import { existsSync, readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { detectStack } from "../detector/index.js";
 import { CONFIG_DEFAULTS } from "../config/defaults.js";
 import type { HarnessConfig } from "../config/types.js";
 import { scaffold } from "../scaffolder/index.js";
 import type { StackReport } from "../detector/types.js";
+import {
+  detectExistingConfigs,
+  mergeClaudeSettings,
+  analyzeCodebaseWithSubAgent,
+  writeSubAgentOutputs,
+} from "../existing-init/index.js";
+import { scaffoldCiWorkflow } from "../ci/index.js";
 
 interface InitOptions {
   dryRun?: boolean;
-  interactive?: boolean; // commander --no-interactive sets this to false
+  interactive?: boolean;
 }
 
 function isGreenfield(dir: string): boolean {
-  const srcExists = existsSync(join(dir, "src"));
-  const hasPackageJson = existsSync(join(dir, "package.json"));
-  const hasCargoToml = existsSync(join(dir, "Cargo.toml"));
-  const hasGoMod = existsSync(join(dir, "go.mod"));
-  // Greenfield = no source directory and no main manifest
-  return !srcExists && !hasPackageJson && !hasCargoToml && !hasGoMod;
+  return (
+    !existsSync(join(dir, "src")) &&
+    !existsSync(join(dir, "package.json")) &&
+    !existsSync(join(dir, "Cargo.toml")) &&
+    !existsSync(join(dir, "go.mod")) &&
+    !existsSync(join(dir, "pyproject.toml")) &&
+    !existsSync(join(dir, "pom.xml"))
+  );
 }
 
-async function promptGreenfield(stack: StackReport): Promise<HarnessConfig> {
+async function promptUser(stack: StackReport): Promise<HarnessConfig> {
   const { default: inquirer } = await import("inquirer");
-
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const answers = await (inquirer.prompt as any)([
-    {
-      type: "input",
-      name: "name",
-      message: "Project name:",
-      default: "my-project",
-    },
+    { type: "input", name: "name", message: "Project name:", default: "my-project" },
     {
       type: "list",
       name: "type",
@@ -38,36 +41,16 @@ async function promptGreenfield(stack: StackReport): Promise<HarnessConfig> {
       choices: ["web-app", "cli", "library", "monorepo", "mobile"],
       default: stack.projectType,
     },
-    {
-      type: "input",
-      name: "testCommand",
-      message: "Test command:",
-      default: stack.testFramework ? guessTestCommand(stack) : "npm test",
-    },
-    {
-      type: "input",
-      name: "lintCommand",
-      message: "Lint command:",
-      default: stack.existingLinters.length ? guessLintCommand(stack) : "npm run lint",
-    },
+    { type: "input", name: "testCommand", message: "Test command:", default: guessTestCommand(stack) },
+    { type: "input", name: "lintCommand", message: "Lint command:", default: guessLintCommand(stack) },
     {
       type: "input",
       name: "typeCheckCommand",
       message: "Type check command:",
       default: stack.languages.includes("typescript") ? "npx tsc --noEmit" : "",
     },
-    {
-      type: "input",
-      name: "buildCommand",
-      message: "Build command:",
-      default: "npm run build",
-    },
-    {
-      type: "confirm",
-      name: "linearEnabled",
-      message: "Enable Linear integration?",
-      default: false,
-    },
+    { type: "input", name: "buildCommand", message: "Build command:", default: "npm run build" },
+    { type: "confirm", name: "linearEnabled", message: "Enable Linear integration?", default: false },
     {
       type: "input",
       name: "linearTeamKey",
@@ -76,7 +59,6 @@ async function promptGreenfield(stack: StackReport): Promise<HarnessConfig> {
       when: (a: Record<string, unknown>) => a.linearEnabled,
     },
   ]);
-
   return buildConfig(answers, stack);
 }
 
@@ -96,10 +78,7 @@ function defaultsFromStack(stack: StackReport): HarnessConfig {
   );
 }
 
-function buildConfig(
-  answers: Record<string, unknown>,
-  stack: StackReport,
-): HarnessConfig {
+function buildConfig(answers: Record<string, unknown>, stack: StackReport): HarnessConfig {
   return {
     ...CONFIG_DEFAULTS,
     project: {
@@ -122,19 +101,14 @@ function buildConfig(
 }
 
 function guessTestCommand(stack: StackReport): string {
-  switch (stack.testFramework) {
-    case "vitest":
-    case "jest":
-      return "npm test";
-    case "pytest":
-      return "pytest";
-    case "cargo-test":
-      return "cargo test";
-    case "go-test":
-      return "go test ./...";
-    default:
-      return "";
-  }
+  const map: Record<string, string> = {
+    vitest: "npm test",
+    jest: "npm test",
+    pytest: "pytest",
+    "cargo-test": "cargo test",
+    "go-test": "go test ./...",
+  };
+  return stack.testFramework ? (map[stack.testFramework] ?? "") : "";
 }
 
 function guessLintCommand(stack: StackReport): string {
@@ -151,13 +125,13 @@ function printGithubSuggestions(): void {
 ┌─────────────────────────────────────────────────────────┐
 │  Recommended GitHub setup (configure manually):         │
 │                                                         │
-│  1. Branch protection on main:                          │
-│     • Require pull request reviews before merging       │
-│     • Require status checks to pass before merging      │
-│     • Disable force push to main                        │
+│  • Branch protection on main:                           │
+│    - Require PR reviews before merging                  │
+│    - Require status checks to pass                      │
+│    - Disable force push to main                         │
 │                                                         │
-│  2. Install the Linear GitHub app for PR auto-linking:  │
-│     https://linear.app/settings/integrations/github     │
+│  • Install the Linear GitHub app for PR auto-linking:   │
+│    https://linear.app/settings/integrations/github      │
 └─────────────────────────────────────────────────────────┘
 `);
 }
@@ -175,21 +149,19 @@ export async function runInit(options: InitOptions): Promise<void> {
   console.log("🔍 Detecting project stack…");
   const stack = await detectStack(cwd);
   const greenfield = isGreenfield(cwd);
+  const existing = detectExistingConfigs(cwd);
 
-  if (greenfield) {
-    console.log("  Detected: greenfield project");
-  } else {
-    const detected = [
-      ...stack.languages,
-      ...stack.frameworks,
-    ].join(", ") || "unknown";
-    console.log(`  Detected: ${detected} (${stack.projectType})`);
+  console.log(`  Type: ${stack.projectType} | Stack: ${[...stack.languages, ...stack.frameworks].join(", ") || "unknown"}`);
+
+  if (!greenfield) {
+    console.log("  Existing project detected.");
+    if (existing.claudeMd) console.log("  ⚠ CLAUDE.md exists — will merge if possible");
+    if (existing.claudeSettings) console.log("  ⚠ .claude/settings.json exists — will merge hooks");
   }
 
   let config: HarnessConfig;
-
   if (interactive && !dryRun) {
-    config = await promptGreenfield(stack);
+    config = await promptUser(stack);
   } else {
     config = defaultsFromStack(stack);
   }
@@ -204,18 +176,45 @@ export async function runInit(options: InitOptions): Promise<void> {
   }
 
   if (!dryRun) {
+    // Merge .claude/settings.json if it existed before
+    if (existing.claudeSettings) {
+      const settingsPath = join(cwd, ".claude", "settings.json");
+      try {
+        const existingSettings = JSON.parse(readFileSync(settingsPath, "utf-8"));
+        const harnessSettings = JSON.parse(
+          result.files.find((f) => f.path === ".claude/settings.json")?.content ?? "{}",
+        );
+        const merged = mergeClaudeSettings(existingSettings, harnessSettings);
+        writeFileSync(settingsPath, JSON.stringify(merged, null, 2));
+        console.log("  ✓ Merged .claude/settings.json");
+      } catch { /* use scaffolded version */ }
+    }
+
+    // Sub-agent analysis for existing projects
+    if (!greenfield) {
+      console.log("\n🤖 Analyzing codebase with sub-agent (Sonnet)…");
+      const analysis = analyzeCodebaseWithSubAgent(cwd, stack);
+      const written = writeSubAgentOutputs(cwd, analysis);
+      for (const f of written) console.log(`  ✓ ${f} (sub-agent generated)`);
+    }
+
+    // Scaffold CI workflow if none exists
+    if (!existing.ciWorkflow) {
+      const ci = scaffoldCiWorkflow(cwd, config, stack);
+      if (ci.created) console.log("  ✓ .github/workflows/ci.yml");
+    }
+
     // Write .harness.json
-    const configPath = join(cwd, ".harness.json");
     const configContent = {
       $schema: "https://raw.githubusercontent.com/tr-io/agentic-harness/main/schema.json",
       ...config,
     };
-    writeFileSync(configPath, JSON.stringify(configContent, null, 2));
-    console.log(`  ✓ .harness.json`);
+    writeFileSync(join(cwd, ".harness.json"), JSON.stringify(configContent, null, 2));
+    console.log("  ✓ .harness.json");
 
     console.log("\n✅ Harness initialized.\n");
     printGithubSuggestions();
   } else {
-    console.log(`\n  (dry run — no files written)\n`);
+    console.log("\n  (dry run — no files written)\n");
   }
 }
