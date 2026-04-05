@@ -1,0 +1,85 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://raw.githubusercontent.com/tr-io/agentic-harness/main/schema.json",
+  "title": "Harness Configuration",
+  "description": "Configuration for @tr-io/harness agentic development harness",
+  "type": "object",
+  "properties": {
+    "$schema": { "type": "string" },
+    "version": {
+      "type": "string",
+      "description": "Harness version this config was generated for",
+      "examples": ["0.1.0"]
+    },
+    "project": {
+      "type": "object",
+      "description": "Project metadata and commands",
+      "properties": {
+        "name": { "type": "string", "description": "Project name" },
+        "type": {
+          "type": "string",
+          "enum": ["web-app", "cli", "library", "monorepo", "mobile"],
+          "description": "Project type"
+        },
+        "stacks": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Detected language/framework stacks (e.g. [\"typescript\", \"react\"])"
+        },
+        "entryPoints": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Main entry point files"
+        },
+        "testCommand": { "type": "string", "description": "Command to run unit tests", "examples": ["npm test"] },
+        "lintCommand": { "type": "string", "description": "Command to run linter", "examples": ["npm run lint"] },
+        "typeCheckCommand": { "type": "string", "description": "Command to run type checker", "examples": ["npx tsc --noEmit"] },
+        "buildCommand": { "type": "string", "description": "Command to build the project", "examples": ["npm run build"] }
+      }
+    },
+    "linear": {
+      "type": "object",
+      "description": "Linear issue tracker integration",
+      "properties": {
+        "enabled": { "type": "boolean", "default": false },
+        "teamKey": { "type": "string", "description": "Linear team key (e.g. \"TRI\")" },
+        "projectId": { "type": "string", "description": "Optional Linear project ID to scope operations" }
+      }
+    },
+    "features": {
+      "type": "object",
+      "description": "Feature toggles. Recommended features default to true; optional features default to false.",
+      "properties": {
+        "adr": { "type": "boolean", "default": true, "description": "Scaffold .ai/adr/ for Architecture Decision Records" },
+        "testingDocs": { "type": "boolean", "default": true, "description": "Scaffold .ai/testing/ for testing conventions" },
+        "completionReminder": { "type": "boolean", "default": true, "description": "Stop hook that reminds agent to update docs and run self-review checklist" },
+        "branchNamingWarning": { "type": "boolean", "default": true, "description": "Warning hook for non-conforming branch names" },
+        "linterBootstrap": { "type": "boolean", "default": true, "description": "Bootstrap linter config if none detected" },
+        "linearIntegration": { "type": "boolean", "default": true, "description": "Inject Linear ticket context into agent session" },
+        "artifactFreshnessCheck": { "type": "boolean", "default": true, "description": "Warn when code changes have no corresponding .ai/ doc updates" },
+        "dddContextMaps": { "type": "boolean", "default": false, "description": "Scaffold .ai/ddd/ for domain-driven design context maps" },
+        "latMd": { "type": "boolean", "default": false, "description": "Integrate lat.md knowledge graph into .ai/ structure" },
+        "evaluatorQA": { "type": "boolean", "default": false, "description": "Enable separate evaluator agent for QA (high token cost)" },
+        "autoLoop": { "type": "boolean", "default": false, "description": "Enable harness auto command for fully automated ticket implementation" },
+        "keelEnforcement": { "type": "boolean", "default": false, "description": "Enable keel structural code enforcement" }
+      },
+      "additionalProperties": false
+    },
+    "hooks": {
+      "type": "object",
+      "description": "Hook configuration",
+      "properties": {
+        "prePush": {
+          "type": "object",
+          "description": "Controls which checks run before git push (all blocking)",
+          "properties": {
+            "lint": { "type": "boolean", "default": true },
+            "typeCheck": { "type": "boolean", "default": true },
+            "unitTest": { "type": "boolean", "default": true }
+          }
+        }
+      }
+    }
+  },
+  "additionalProperties": false
+}
