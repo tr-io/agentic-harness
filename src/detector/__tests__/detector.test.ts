@@ -48,7 +48,7 @@ describe("detectStack — languages", () => {
   });
 
   it("detects Rust from Cargo.toml", async () => {
-    write("Cargo.toml", "[package]\nname = \"myapp\"\n");
+    write("Cargo.toml", '[package]\nname = "myapp"\n');
     const report = await detectStack(dir);
     expect(report.languages).toContain("rust");
   });
@@ -149,7 +149,7 @@ describe("detectStack — test framework", () => {
   });
 
   it("detects cargo-test for Rust projects", async () => {
-    write("Cargo.toml", "[package]\nname = \"test\"\n");
+    write("Cargo.toml", '[package]\nname = "test"\n');
     const report = await detectStack(dir);
     expect(report.testFramework).toBe("cargo-test");
   });

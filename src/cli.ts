@@ -1,12 +1,12 @@
-import { Command } from "commander";
 import { readFileSync } from "node:fs";
-import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
-import { registerInit } from "./commands/init.js";
-import { registerCheck } from "./commands/check.js";
-import { registerUpgrade } from "./commands/upgrade.js";
-import { registerLintSetup } from "./commands/lint-setup.js";
+import { fileURLToPath } from "node:url";
+import { Command } from "commander";
 import { registerAuto } from "./commands/auto.js";
+import { registerCheck } from "./commands/check.js";
+import { registerInit } from "./commands/init.js";
+import { registerLintSetup } from "./commands/lint-setup.js";
+import { registerUpgrade } from "./commands/upgrade.js";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const pkg = JSON.parse(readFileSync(join(__dirname, "../package.json"), "utf-8"));

@@ -62,7 +62,11 @@ function detectLanguages(dir: string): Language[] {
   ) {
     langs.add("python");
   }
-  if (fileExists(dir, "pom.xml") || fileExists(dir, "build.gradle") || fileExists(dir, "build.gradle.kts")) {
+  if (
+    fileExists(dir, "pom.xml") ||
+    fileExists(dir, "build.gradle") ||
+    fileExists(dir, "build.gradle.kts")
+  ) {
     langs.add("java");
   }
   if (fileExists(dir, "Gemfile")) langs.add("ruby");

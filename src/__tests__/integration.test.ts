@@ -29,7 +29,10 @@ beforeEach(() => {
   dir = mkdtempSync(join(tmpdir(), "harness-integration-"));
   // Minimal greenfield project (just a tsconfig so detector picks up TypeScript)
   writeFileSync(join(dir, "tsconfig.json"), "{}");
-  writeFileSync(join(dir, "package.json"), JSON.stringify({ name: "test-app", scripts: { test: "vitest run" } }));
+  writeFileSync(
+    join(dir, "package.json"),
+    JSON.stringify({ name: "test-app", scripts: { test: "vitest run" } }),
+  );
   writeFileSync(join(dir, "biome.json"), "{}");
 });
 
@@ -278,9 +281,7 @@ describe("mergeClaudeSettings", () => {
 
 describe("upgrade checksums", () => {
   it("round-trips checksums through write → read", async () => {
-    const { writeChecksums, readChecksums, computeChecksums } = await import(
-      "../upgrade/index.js"
-    );
+    const { writeChecksums, readChecksums, computeChecksums } = await import("../upgrade/index.js");
 
     const files = [
       { path: "CLAUDE.md", content: "# My project\n" },

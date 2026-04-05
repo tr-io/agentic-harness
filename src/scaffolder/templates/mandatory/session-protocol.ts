@@ -2,10 +2,10 @@ import type { TemplateContext } from "../../types.js";
 
 export function sessionProtocol(ctx: TemplateContext): string {
   const linearStep = ctx.features.linearIntegration
-    ? `   └── If working on a ticket: fetch Linear ticket details (branch name contains ticket ID)`
+    ? "   └── If working on a ticket: fetch Linear ticket details (branch name contains ticket ID)"
     : "";
   const linearBranch = ctx.features.linearIntegration
-    ? `   ├── If Linear enabled: fetch ticket → update status → In Progress`
+    ? "   ├── If Linear enabled: fetch ticket → update status → In Progress"
     : "";
 
   return `# Session Protocol

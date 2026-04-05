@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { assessComplexity, proposeSplit } from "../complexity.js";
 import type { LinearTicket } from "../client.js";
+import { assessComplexity, proposeSplit } from "../complexity.js";
 
 function makeTicket(overrides: Partial<LinearTicket> = {}): LinearTicket {
   return {

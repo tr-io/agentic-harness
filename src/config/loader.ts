@@ -1,7 +1,7 @@
 import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
-import type { HarnessConfig } from "./types.js";
 import { CONFIG_DEFAULTS } from "./defaults.js";
+import type { HarnessConfig } from "./types.js";
 
 const FILENAME = ".harness.json";
 
@@ -43,10 +43,16 @@ function validate(raw: unknown, filePath: string): asserts raw is Partial<Harnes
   if (obj.version !== undefined && typeof obj.version !== "string") {
     throw new HarnessConfigError(`${filePath}: "version" must be a string`);
   }
-  if (obj.project !== undefined && (typeof obj.project !== "object" || Array.isArray(obj.project))) {
+  if (
+    obj.project !== undefined &&
+    (typeof obj.project !== "object" || Array.isArray(obj.project))
+  ) {
     throw new HarnessConfigError(`${filePath}: "project" must be an object`);
   }
-  if (obj.features !== undefined && (typeof obj.features !== "object" || Array.isArray(obj.features))) {
+  if (
+    obj.features !== undefined &&
+    (typeof obj.features !== "object" || Array.isArray(obj.features))
+  ) {
     throw new HarnessConfigError(`${filePath}: "features" must be an object`);
   }
   if (obj.hooks !== undefined && (typeof obj.hooks !== "object" || Array.isArray(obj.hooks))) {

@@ -1,7 +1,7 @@
 import { existsSync, readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
-import { detectStack } from "../detector/index.js";
 import { loadConfigOrNull } from "../config/loader.js";
+import { detectStack } from "../detector/index.js";
 import { linterTemplates } from "./templates/index.js";
 
 export async function runLintSetup(): Promise<void> {

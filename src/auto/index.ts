@@ -5,19 +5,19 @@
 import { spawnSync } from "node:child_process";
 import { existsSync } from "node:fs";
 import { join } from "node:path";
+import { loadConfigOrNull } from "../config/loader.js";
 import {
+  LinearClientError,
   assessComplexity,
   createSubIssue,
   extractTicketIdFromBranch,
   fetchTicket,
   formatTicketContext,
   isLinearAvailable,
-  LinearClientError,
   proposeSplit,
   updateTicketStatus,
 } from "../linear/index.js";
 import type { LinearTicket } from "../linear/index.js";
-import { loadConfigOrNull } from "../config/loader.js";
 
 interface AutoOptions {
   simplify?: boolean;
@@ -60,7 +60,7 @@ async function handleComplexity(ticket: LinearTicket): Promise<LinearTicket> {
   splits.forEach((s, i) => console.log(`   ${i + 1}. ${s.title}`));
 
   const { default: inquirer } = await import("inquirer");
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // biome-ignore lint/suspicious/noExplicitAny: inquirer v13 prompt() type is overly strict
   const { action } = await (inquirer.prompt as any)([
     {
       type: "list",
@@ -105,11 +105,7 @@ function buildBranchName(ticket: LinearTicket): string {
   return `${id}-${slug}`;
 }
 
-function buildSessionPrompt(
-  ticket: LinearTicket,
-  branchName: string,
-  simplify: boolean,
-): string {
+function buildSessionPrompt(ticket: LinearTicket, branchName: string, simplify: boolean): string {
   const ticketCtx = formatTicketContext(ticket);
   return `You are implementing a Linear ticket as part of the @tr-io/harness automated workflow.
 
@@ -171,13 +167,7 @@ interface CiStatus {
 }
 
 async function getCiStatus(prUrl: string): Promise<CiStatus> {
-  const result = gh(
-    "pr",
-    "checks",
-    prUrl,
-    "--json",
-    "name,state,conclusion",
-  );
+  const result = gh("pr", "checks", prUrl, "--json", "name,state,conclusion");
 
   if (result.status !== 0) {
     return { state: "pending", failedChecks: [] };
@@ -191,9 +181,7 @@ async function getCiStatus(prUrl: string): Promise<CiStatus> {
     }>;
 
     const pending = checks.filter((c) => c.state === "PENDING" || c.state === "QUEUED");
-    const failed = checks.filter(
-      (c) => c.conclusion === "FAILURE" || c.conclusion === "TIMED_OUT",
-    );
+    const failed = checks.filter((c) => c.conclusion === "FAILURE" || c.conclusion === "TIMED_OUT");
 
     if (pending.length > 0) return { state: "pending", failedChecks: [] };
     if (failed.length > 0) {
@@ -214,7 +202,11 @@ async function getFailureLogs(prUrl: string, failedChecks: string[]): Promise<st
   return logs.join("\n\n") || "CI failed — check the PR for details.";
 }
 
-async function autoFixCi(prUrl: string, ticket: LinearTicket, failedChecks: string[]): Promise<boolean> {
+async function autoFixCi(
+  prUrl: string,
+  ticket: LinearTicket,
+  failedChecks: string[],
+): Promise<boolean> {
   const logs = await getFailureLogs(prUrl, failedChecks);
 
   const fixPrompt = `CI failed on PR ${prUrl} for ticket ${ticket.identifier}.
@@ -252,10 +244,7 @@ async function waitForMerge(prUrl: string): Promise<boolean> {
   return false;
 }
 
-async function monitorAndWait(
-  prUrl: string,
-  ticket: LinearTicket,
-): Promise<boolean> {
+async function monitorAndWait(prUrl: string, ticket: LinearTicket): Promise<boolean> {
   console.log(`\n  Monitoring CI for ${prUrl}`);
   let fixAttempts = 0;
 
@@ -279,7 +268,7 @@ async function monitorAndWait(
         "comment",
         prUrl,
         "--body",
-        `✅ CI passed — ready for review. Waiting for approval.\n\n_Automated by @tr-io/harness_`,
+        "✅ CI passed — ready for review. Waiting for approval.\n\n_Automated by @tr-io/harness_",
       );
       break;
     }
@@ -328,9 +317,7 @@ export async function runAuto(ticketId: string, options: AutoOptions): Promise<v
   }
 
   if (!isLinearAvailable()) {
-    console.error(
-      "Linear API key not found. Set HARNESS_LINEAR_API_KEY or LINEAR_API_KEY.",
-    );
+    console.error("Linear API key not found. Set HARNESS_LINEAR_API_KEY or LINEAR_API_KEY.");
     process.exit(1);
   }
 
@@ -358,7 +345,7 @@ export async function runAuto(ticketId: string, options: AutoOptions): Promise<v
   // 3. Update status → In Progress
   try {
     await updateTicketStatus(ticket.id, ticket.team.id, "In Progress");
-    console.log(`  ✓ Status → In Progress`);
+    console.log("  ✓ Status → In Progress");
   } catch {
     console.warn("  ⚠ Could not update ticket status (continuing anyway)");
   }
@@ -381,8 +368,10 @@ export async function runAuto(ticketId: string, options: AutoOptions): Promise<v
   // 5. Update status → In Review
   try {
     await updateTicketStatus(ticket.id, ticket.team.id, "In Review");
-    console.log(`  ✓ Status → In Review`);
-  } catch { /* non-fatal */ }
+    console.log("  ✓ Status → In Review");
+  } catch {
+    /* non-fatal */
+  }
 
   // 6. CI monitoring + merge waiting
   const success = await monitorAndWait(prUrl, ticket);
@@ -390,8 +379,10 @@ export async function runAuto(ticketId: string, options: AutoOptions): Promise<v
   if (success) {
     try {
       await updateTicketStatus(ticket.id, ticket.team.id, "Done");
-      console.log(`\n  ✓ Status → Done`);
-    } catch { /* non-fatal */ }
+      console.log("\n  ✓ Status → Done");
+    } catch {
+      /* non-fatal */
+    }
     console.log(`\n✅ ${ticket.identifier} complete. PR merged: ${prUrl}\n`);
   } else {
     console.log(`\n⚠  ${ticket.identifier} requires manual attention: ${prUrl}\n`);

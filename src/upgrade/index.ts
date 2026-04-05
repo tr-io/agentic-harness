@@ -1,10 +1,10 @@
 import { createHash } from "node:crypto";
 import { existsSync, readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
-import { loadConfigOrNull } from "../config/loader.js";
 import { CONFIG_DEFAULTS } from "../config/defaults.js";
-import { buildFileList } from "../scaffolder/index.js";
+import { loadConfigOrNull } from "../config/loader.js";
 import { detectStack } from "../detector/index.js";
+import { buildFileList } from "../scaffolder/index.js";
 
 const CHECKSUMS_FILE = ".harness-checksums.json";
 
@@ -98,11 +98,14 @@ export async function runUpgrade(options: { dryRun?: boolean }): Promise<void> {
   }
 
   // Check for new feature toggles to add
-  const newFeatures = Object.keys(CONFIG_DEFAULTS.features).filter(
-    (k) => !(k in config.features),
-  );
+  const newFeatures = Object.keys(CONFIG_DEFAULTS.features).filter((k) => !(k in config.features));
 
-  if (unchanged.length === 0 && diffs.length === 0 && newPaths.length === 0 && newFeatures.length === 0) {
+  if (
+    unchanged.length === 0 &&
+    diffs.length === 0 &&
+    newPaths.length === 0 &&
+    newFeatures.length === 0
+  ) {
     console.log("✓ Already up to date.");
     return;
   }
@@ -114,7 +117,7 @@ export async function runUpgrade(options: { dryRun?: boolean }): Promise<void> {
   }
 
   if (newPaths.length > 0) {
-    console.log(`\nNew files:`);
+    console.log("\nNew files:");
     for (const p of newPaths) {
       console.log(`  + ${p}`);
       if (!dryRun) {
@@ -144,7 +147,7 @@ export async function runUpgrade(options: { dryRun?: boolean }): Promise<void> {
           console.log("  Your customizations will be affected. Choose how to proceed:");
         }
 
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        // biome-ignore lint/suspicious/noExplicitAny: inquirer v13 prompt() type is overly strict
         const { action } = await (inquirer.prompt as any)([
           {
             type: "list",
@@ -159,9 +162,9 @@ export async function runUpgrade(options: { dryRun?: boolean }): Promise<void> {
 
         if (action === "overwrite") {
           writeFileSync(join(cwd, diff.path), diff.newContent, "utf-8");
-          console.log(`    ✓ Updated`);
+          console.log("    ✓ Updated");
         } else {
-          console.log(`    ─ Kept`);
+          console.log("    ─ Kept");
         }
       }
     }
@@ -173,12 +176,17 @@ export async function runUpgrade(options: { dryRun?: boolean }): Promise<void> {
       features: {
         ...config.features,
         ...Object.fromEntries(
-          newFeatures.map((k) => [k, ((CONFIG_DEFAULTS.features as unknown) as Record<string, boolean>)[k] ?? false]),
+          newFeatures.map((k) => [
+            k,
+            (CONFIG_DEFAULTS.features as unknown as Record<string, boolean>)[k] ?? false,
+          ]),
         ),
       },
     };
     writeFileSync(join(cwd, ".harness.json"), JSON.stringify(updatedConfig, null, 2));
-    console.log(`\n✓ Added new feature toggles: ${newFeatures.join(", ")} (all disabled by default)`);
+    console.log(
+      `\n✓ Added new feature toggles: ${newFeatures.join(", ")} (all disabled by default)`,
+    );
   }
 
   if (!dryRun) {

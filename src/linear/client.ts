@@ -55,7 +55,9 @@ async function graphql<T>(query: string, variables: Record<string, unknown> = {}
   const json = (await response.json()) as { data?: T; errors?: Array<{ message: string }> };
 
   if (json.errors?.length) {
-    throw new LinearClientError(`Linear API errors: ${json.errors.map((e) => e.message).join(", ")}`);
+    throw new LinearClientError(
+      `Linear API errors: ${json.errors.map((e) => e.message).join(", ")}`,
+    );
   }
 
   if (!json.data) {
@@ -104,9 +106,7 @@ export async function updateTicketStatus(
   stateName: string,
 ): Promise<void> {
   const states = await fetchTeamStates(teamId);
-  const target = states.find(
-    (s) => s.name.toLowerCase() === stateName.toLowerCase(),
-  );
+  const target = states.find((s) => s.name.toLowerCase() === stateName.toLowerCase());
   if (!target) {
     throw new LinearClientError(
       `State "${stateName}" not found in team. Available: ${states.map((s) => s.name).join(", ")}`,

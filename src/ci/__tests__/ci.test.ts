@@ -2,10 +2,10 @@ import { mkdtempSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
-import { generateCiWorkflow, scaffoldCiWorkflow } from "../index.js";
 import { CONFIG_DEFAULTS } from "../../config/defaults.js";
 import type { HarnessConfig } from "../../config/types.js";
 import type { StackReport } from "../../detector/types.js";
+import { generateCiWorkflow, scaffoldCiWorkflow } from "../index.js";
 
 let dir: string;
 
