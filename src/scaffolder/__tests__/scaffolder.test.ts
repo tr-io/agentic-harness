@@ -1,4 +1,4 @@
-import { mkdtempSync, rmSync } from "node:fs";
+import { existsSync, mkdtempSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
@@ -116,7 +116,7 @@ describe("scaffold", () => {
   it("writes all files to target directory", () => {
     const result = scaffold(dir, baseConfig, baseStack);
     expect(result.files.length).toBeGreaterThan(0);
-    const { existsSync } = require("node:fs");
+
     for (const f of result.files) {
       expect(existsSync(join(dir, f.path))).toBe(true);
     }
@@ -125,7 +125,7 @@ describe("scaffold", () => {
   it("dry-run returns file list without writing", () => {
     const result = scaffold(dir, baseConfig, baseStack, { dryRun: true });
     expect(result.files.length).toBeGreaterThan(0);
-    const { existsSync } = require("node:fs");
+
     for (const f of result.files) {
       expect(existsSync(join(dir, f.path))).toBe(false);
     }
