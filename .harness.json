@@ -1,0 +1,45 @@
+{
+  "$schema": "https://raw.githubusercontent.com/tr-io/agentic-harness/main/schema.json",
+  "version": "0.1.0",
+  "project": {
+    "name": "@tr-io/harness",
+    "type": "cli",
+    "stacks": [
+      "typescript"
+    ],
+    "entryPoints": [
+      "./dist/cli.js",
+      "src/cli.ts"
+    ],
+    "testCommand": "npm test",
+    "lintCommand": "npx biome check .",
+    "typeCheckCommand": "npx tsc --noEmit",
+    "buildCommand": "npm run build"
+  },
+  "linear": {
+    "enabled": true,
+    "teamKey": "TRI",
+    "projectId": "988ef931-0146-4281-8f54-80060154ef31"
+  },
+  "features": {
+    "adr": true,
+    "testingDocs": true,
+    "completionReminder": true,
+    "branchNamingWarning": true,
+    "linterBootstrap": true,
+    "linearIntegration": true,
+    "artifactFreshnessCheck": true,
+    "dddContextMaps": false,
+    "latMd": false,
+    "evaluatorQA": false,
+    "autoLoop": false,
+    "keelEnforcement": false
+  },
+  "hooks": {
+    "prePush": {
+      "lint": true,
+      "typeCheck": true,
+      "unitTest": true
+    }
+  }
+}
