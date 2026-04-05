@@ -21,7 +21,8 @@
     "dist"
   ],
   "dependencies": {
-    "commander": "^12.1.0"
+    "commander": "^12.1.0",
+    "inquirer": "^13.3.2"
   },
   "devDependencies": {
     "@biomejs/biome": "^1.9.4",
