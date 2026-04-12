@@ -142,20 +142,32 @@ Start now. When done, output the PR URL on a line by itself prefixed with "PR: "
 async function spawnClaudeSession(prompt: string): Promise<string | null> {
   console.log("  Spawning Claude Code session…");
 
-  const result = spawnSync("claude", ["--print", prompt], {
-    encoding: "utf-8",
-    cwd: process.cwd(),
-    timeout: 30 * 60 * 1000, // 30 minute timeout
-    stdio: ["pipe", "pipe", "inherit"],
-  });
+  const result = spawnSync(
+    "claude",
+    ["--print", "--permission-mode", "bypassPermissions", prompt],
+    {
+      encoding: "utf-8",
+      cwd: process.cwd(),
+      timeout: 30 * 60 * 1000, // 30 minute timeout
+      stdio: ["pipe", "pipe", "inherit"],
+    },
+  );
 
   if (result.status !== 0) {
     console.error("  Claude session failed or timed out");
+    if (result.stdout) {
+      console.error("\n  Session output (last 2000 chars):");
+      console.error(result.stdout.slice(-2000));
+    }
     return null;
   }
 
   // Extract PR URL from output
   const prMatch = result.stdout?.match(/^PR:\s*(https?:\/\/\S+)/m);
+  if (!prMatch) {
+    console.error("\n  Session output (last 2000 chars):");
+    console.error(result.stdout?.slice(-2000));
+  }
   return prMatch?.[1] ?? null;
 }
 
@@ -220,12 +232,16 @@ ${logs}
 Diagnose and fix the CI failures. Make targeted fixes, commit them, and push to the existing branch.
 Do NOT create a new branch. Do NOT open a new PR. Just fix the failures and push.`;
 
-  const result = spawnSync("claude", ["--print", "--no-markdown", fixPrompt], {
-    encoding: "utf-8",
-    cwd: process.cwd(),
-    timeout: 15 * 60 * 1000,
-    stdio: ["pipe", "pipe", "inherit"],
-  });
+  const result = spawnSync(
+    "claude",
+    ["--print", "--permission-mode", "bypassPermissions", fixPrompt],
+    {
+      encoding: "utf-8",
+      cwd: process.cwd(),
+      timeout: 15 * 60 * 1000,
+      stdio: ["pipe", "pipe", "inherit"],
+    },
+  );
 
   return result.status === 0;
 }
