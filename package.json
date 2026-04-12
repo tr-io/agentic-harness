@@ -17,7 +17,6 @@
     "prepublishOnly": "npm run build",
     "prepare": "node_modules/.bin/tsup"
   },
-  "files": ["dist"],
   "dependencies": {
     "commander": "^12.1.0",
     "inquirer": "^13.3.2"
