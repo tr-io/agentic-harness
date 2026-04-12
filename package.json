@@ -14,7 +14,8 @@
     "typecheck": "tsc --noEmit",
     "lint": "biome check src",
     "lint:fix": "biome check --write src",
-    "prepublishOnly": "npm run build"
+    "prepublishOnly": "npm run build",
+    "prepare": "node_modules/.bin/tsup"
   },
   "files": ["dist"],
   "dependencies": {
