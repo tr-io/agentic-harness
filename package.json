@@ -14,19 +14,18 @@
     "typecheck": "tsc --noEmit",
     "lint": "biome check src",
     "lint:fix": "biome check --write src",
-    "prepublishOnly": "npm run build",
-    "prepare": "node node_modules/tsup/dist/cli-default.js"
+    "prepublishOnly": "npm run build"
   },
   "dependencies": {
-    "commander": "^12.1.0",
-    "inquirer": "^13.3.2"
+    "commander": "^12.1.0"
   },
   "devDependencies": {
     "@biomejs/biome": "^1.9.4",
     "@types/node": "^22.0.0",
     "tsup": "^8.3.0",
     "typescript": "^5.6.0",
-    "vitest": "^4.1.2"
+    "vitest": "^4.1.2",
+    "inquirer": "^13.3.2"
   },
   "engines": {
     "node": ">=20.0.0"
