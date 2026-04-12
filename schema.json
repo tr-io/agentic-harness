@@ -53,9 +53,29 @@
         }
       }
     },
+    "integrations": {
+      "type": "object",
+      "description": "Integration configurations for external services",
+      "properties": {
+        "linear": {
+          "type": "object",
+          "description": "Linear issue tracker integration",
+          "properties": {
+            "enabled": { "type": "boolean", "default": false },
+            "teamKey": { "type": "string", "description": "Linear team key (e.g. \"TRI\")" },
+            "projectId": {
+              "type": "string",
+              "description": "Optional Linear project ID to scope operations"
+            }
+          }
+        }
+      },
+      "additionalProperties": false
+    },
     "linear": {
       "type": "object",
-      "description": "Linear issue tracker integration",
+      "description": "DEPRECATED: use integrations.linear instead. Kept for backwards compatibility.",
+      "deprecated": true,
       "properties": {
         "enabled": { "type": "boolean", "default": false },
         "teamKey": { "type": "string", "description": "Linear team key (e.g. \"TRI\")" },

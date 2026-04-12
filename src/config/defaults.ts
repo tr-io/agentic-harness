@@ -12,9 +12,11 @@ export const CONFIG_DEFAULTS: HarnessConfig = {
     typeCheckCommand: "",
     buildCommand: "",
   },
-  linear: {
-    enabled: false,
-    teamKey: "",
+  integrations: {
+    linear: {
+      enabled: false,
+      teamKey: "",
+    },
   },
   features: {
     // Recommended: on by default
