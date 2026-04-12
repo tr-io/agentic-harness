@@ -4,7 +4,7 @@
   "description": "Agentic development harness for Claude Code projects",
   "type": "module",
   "bin": {
-    "harness": "./dist/cli.js"
+    "harness": "./dist/cli.cjs"
   },
   "scripts": {
     "build": "tsup",
