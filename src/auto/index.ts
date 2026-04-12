@@ -317,9 +317,13 @@ async function monitorAndWait(prUrl: string, ticket: LinearTicket): Promise<bool
     await autoFixCi(prUrl, ticket, status.failedChecks);
   }
 
+<<<<<<< HEAD
   console.log(
     `\n  CI monitoring timed out after ${(CI_MAX_POLL_ATTEMPTS * CI_POLL_INTERVAL_MS) / 60_000} minutes.`,
   );
+=======
+  console.log(`\n  CI monitoring timed out after ${CI_MAX_POLL_ATTEMPTS * CI_POLL_INTERVAL_MS / 60_000} minutes.`);
+>>>>>>> 84420ea (fix(auto): fix infinite CI poll loop and IN_PROGRESS state handling)
   console.log(`  Review CI status manually: ${prUrl}`);
 
   // Wait for merge
