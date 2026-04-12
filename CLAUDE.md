@@ -1,4 +1,4 @@
-# @tr-io/harness
+# agentic-harness
 
 > **Project type:** cli | **Stack:** typescript
 
@@ -28,7 +28,7 @@ See [.ai/agent-instructions/](.ai/agent-instructions/) for:
 - **Branches:** `<ticket-id>-<description>` (e.g. `tri-42-add-auth`)
 - [ADRs](.ai/adr/) for architectural decisions
 - [Testing conventions](.ai/testing/conventions.md)
-- **Linear:** fetch ticket context via branch name (e.g. `tri-42-<description>`)
+- **Linear:** fetch ticket context via branch name (e.g. `tri, the project is https://linear.app/triobox/project/agentic-harness-e3c80386917a/overview-42-<description>`)
 
 ## Constraints
 

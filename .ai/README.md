@@ -12,7 +12,7 @@ Instructions agents follow at each lifecycle stage.
 - [pre-push.md](agent-instructions/pre-push.md) — before every push
 
 ### codebase/
-Navigation maps for the . codebase.
+Navigation maps for the agentic-harness codebase.
 Add one file per major module/subsystem describing structure, entry points, and key abstractions.
 
 ### adr/

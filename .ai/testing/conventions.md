@@ -1,6 +1,6 @@
 # Testing Conventions
 
-This document defines the testing strategy for **.**.
+This document defines the testing strategy for **agentic-harness**.
 
 ## Test Types
 

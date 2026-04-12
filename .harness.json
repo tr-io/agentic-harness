@@ -2,10 +2,15 @@
   "$schema": "https://raw.githubusercontent.com/tr-io/agentic-harness/main/schema.json",
   "version": "0.1.0",
   "project": {
-    "name": "@tr-io/harness",
+    "name": "agentic-harness",
     "type": "cli",
-    "stacks": ["typescript"],
-    "entryPoints": ["./dist/cli.js", "src/cli.ts"],
+    "stacks": [
+      "typescript"
+    ],
+    "entryPoints": [
+      "./dist/cli.cjs",
+      "src/cli.ts"
+    ],
     "testCommand": "npm test",
     "lintCommand": "npx biome check .",
     "typeCheckCommand": "npx tsc --noEmit",
@@ -13,8 +18,7 @@
   },
   "linear": {
     "enabled": true,
-    "teamKey": "TRI",
-    "projectId": "988ef931-0146-4281-8f54-80060154ef31"
+    "teamKey": "TRI, the project is https://linear.app/triobox/project/agentic-harness-e3c80386917a/overview"
   },
   "features": {
     "adr": true,
