@@ -9,7 +9,6 @@ import { registerUpgrade } from "./commands/upgrade.js";
 
 // Use inline version string — avoids import.meta.url / __dirname issues
 // across ESM/CJS output formats. Version is injected at build time.
-// biome-ignore lint/suspicious/noExplicitAny: JSON.parse returns any
 const pkg = JSON.parse(readFileSync(join(__dirname, "../package.json"), "utf-8"));
 
 const program = new Command();

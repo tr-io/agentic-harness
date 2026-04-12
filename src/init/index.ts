@@ -159,7 +159,9 @@ export async function runInit(options: InitOptions): Promise<void> {
   const force = Boolean(options.force);
 
   if (existsSync(join(cwd, ".harness.json")) && !dryRun && !force) {
-    console.log("⚠  .harness.json already exists. Run harness upgrade to update, or harness init --force to re-scaffold.");
+    console.log(
+      "⚠  .harness.json already exists. Run harness upgrade to update, or harness init --force to re-scaffold.",
+    );
     return;
   }
 
