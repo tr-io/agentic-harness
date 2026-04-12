@@ -16,14 +16,12 @@ Built from [Anthropic](https://www.anthropic.com/engineering/harness-design-long
 ## Installation
 
 ```bash
-# Install from this repo
-npm install -g git+ssh://git@github.com/tr-io/agentic-harness.git
-
-# Or pin to a specific version
-npm install -g git+ssh://git@github.com/tr-io/agentic-harness.git#v0.1.0
+npm install -g https://raw.githubusercontent.com/tr-io/agentic-harness/main/tr-io-harness-0.1.0.tgz
 ```
 
 Requires Node.js 20+.
+
+> **Note:** Install via the packed `.tgz` rather than a git URL. npm always runs an inner `npm install --force` on git packages which strips the built `dist/` files.
 
 ## Quick start
 
