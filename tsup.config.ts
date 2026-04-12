@@ -6,10 +6,13 @@ export default defineConfig({
   target: "node20",
   outDir: "dist",
   clean: true,
-  // Bundle inquirer and all @inquirer/* sub-packages so they don't need
-  // to be installed as node_modules (which fails on global npm install).
-  // Keep commander external — it's a small CJS package that installs cleanly.
-  noExternal: ["inquirer", /^@inquirer\//],
+  // Bundle inquirer and its deps so they don't need to be extracted into
+  // node_modules during global npm install (which fails on @inquirer/* packages).
+  // commander stays external — simple CJS, installs cleanly.
+  noExternal: ["inquirer", /^@inquirer\//, "mute-stream", "ora", "cli-cursor", "cli-spinners"],
+  // Shim require() so CJS packages bundled into ESM output work correctly
+  // (e.g. mute-stream does require("stream") which fails without this)
+  shims: true,
   banner: {
     js: "#!/usr/bin/env node",
   },
