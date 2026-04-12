@@ -8,6 +8,7 @@ import {
 import {
   CONFIG_DEFAULTS
 } from "./chunk-JRM7MC4Q.js";
+import "./chunk-ZWE3DS7E.js";
 
 // src/init/index.ts
 import { existsSync as existsSync3, readFileSync as readFileSync2, writeFileSync as writeFileSync3 } from "fs";
@@ -298,7 +299,7 @@ function isGreenfield(dir) {
   return !existsSync3(join3(dir, "src")) && !existsSync3(join3(dir, "package.json")) && !existsSync3(join3(dir, "Cargo.toml")) && !existsSync3(join3(dir, "go.mod")) && !existsSync3(join3(dir, "pyproject.toml")) && !existsSync3(join3(dir, "pom.xml"));
 }
 async function promptUser(stack) {
-  const { default: inquirer } = await import("inquirer");
+  const { default: inquirer } = await import("./dist-AKLBVIGZ.js");
   const answers = await inquirer.prompt([
     { type: "input", name: "name", message: "Project name:", default: "my-project" },
     {
@@ -483,4 +484,4 @@ async function runInit(options) {
 export {
   runInit
 };
-//# sourceMappingURL=init-65B2NH7X.js.map
+//# sourceMappingURL=init-3ISN3QZ4.js.map

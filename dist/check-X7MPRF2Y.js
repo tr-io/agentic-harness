@@ -3,6 +3,7 @@ import {
   loadConfigOrNull
 } from "./chunk-Q4LBGWBM.js";
 import "./chunk-JRM7MC4Q.js";
+import "./chunk-ZWE3DS7E.js";
 
 // src/check/index.ts
 import { existsSync, readFileSync, statSync } from "fs";
@@ -136,4 +137,4 @@ ${counts.pass} passed, ${counts.warn} warnings, ${counts.fail} failed
 export {
   runCheck
 };
-//# sourceMappingURL=check-7BZUPXOQ.js.map
+//# sourceMappingURL=check-X7MPRF2Y.js.map

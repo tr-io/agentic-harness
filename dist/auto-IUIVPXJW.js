@@ -3,6 +3,7 @@ import {
   loadConfigOrNull
 } from "./chunk-Q4LBGWBM.js";
 import "./chunk-JRM7MC4Q.js";
+import "./chunk-ZWE3DS7E.js";
 
 // src/auto/index.ts
 import { spawnSync } from "child_process";
@@ -249,7 +250,7 @@ async function handleComplexity(ticket) {
   console.log(`
   Proposed split into ${splits.length} sub-tickets:`);
   splits.forEach((s, i) => console.log(`   ${i + 1}. ${s.title}`));
-  const { default: inquirer } = await import("inquirer");
+  const { default: inquirer } = await import("./dist-AKLBVIGZ.js");
   const { action } = await inquirer.prompt([
     {
       type: "list",
@@ -510,4 +511,4 @@ async function runAuto(ticketId, options) {
 export {
   runAuto
 };
-//# sourceMappingURL=auto-LDSBB6D6.js.map
+//# sourceMappingURL=auto-IUIVPXJW.js.map

@@ -11,6 +11,7 @@ import {
 import {
   CONFIG_DEFAULTS
 } from "./chunk-JRM7MC4Q.js";
+import "./chunk-ZWE3DS7E.js";
 
 // src/upgrade/index.ts
 import { createHash } from "crypto";
@@ -111,7 +112,7 @@ Harness Upgrade${dryRun ? " (dry run)" : ""}
       console.log(`  ~ ${diff.path}${customTag}`);
     }
     if (!dryRun) {
-      const { default: inquirer } = await import("inquirer");
+      const { default: inquirer } = await import("./dist-AKLBVIGZ.js");
       for (const diff of diffs) {
         console.log(`
 \u2500\u2500\u2500 ${diff.path} \u2500\u2500\u2500`);
@@ -169,4 +170,4 @@ export {
   runUpgrade,
   writeChecksums
 };
-//# sourceMappingURL=upgrade-FXJ5JPXG.js.map
+//# sourceMappingURL=upgrade-N3P4KRFG.js.map

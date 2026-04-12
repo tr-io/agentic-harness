@@ -6,6 +6,7 @@ import {
   detectStack
 } from "./chunk-GE2FWTDY.js";
 import "./chunk-JRM7MC4Q.js";
+import "./chunk-ZWE3DS7E.js";
 
 // src/lint-setup/index.ts
 import { existsSync, writeFileSync } from "fs";
@@ -175,4 +176,4 @@ async function runLintSetup() {
 export {
   runLintSetup
 };
-//# sourceMappingURL=lint-setup-FU6CTTSO.js.map
+//# sourceMappingURL=lint-setup-YSYDLWKQ.js.map
