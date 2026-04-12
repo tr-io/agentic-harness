@@ -16,7 +16,7 @@ Built from [Anthropic](https://www.anthropic.com/engineering/harness-design-long
 ## Installation
 
 ```bash
-npm install -g https://raw.githubusercontent.com/tr-io/agentic-harness/main/tr-io-harness-0.1.1.tgz
+npm install -g https://raw.githubusercontent.com/tr-io/agentic-harness/main/tr-io-harness-0.1.2.tgz
 ```
 
 Requires Node.js 20+.
