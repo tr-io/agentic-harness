@@ -16,17 +16,16 @@
     "lint:fix": "biome check --write src",
     "prepublishOnly": "npm run build"
   },
-  "files": ["dist"],
   "dependencies": {
-    "commander": "^12.1.0",
-    "inquirer": "^13.3.2"
+    "commander": "^12.1.0"
   },
   "devDependencies": {
     "@biomejs/biome": "^1.9.4",
     "@types/node": "^22.0.0",
     "tsup": "^8.3.0",
     "typescript": "^5.6.0",
-    "vitest": "^4.1.2"
+    "vitest": "^4.1.2",
+    "inquirer": "^13.3.2"
   },
   "engines": {
     "node": ">=20.0.0"

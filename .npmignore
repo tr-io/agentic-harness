@@ -1,0 +1,14 @@
+# Exclude everything except dist/, package.json, README.md, and schema.json
+src/
+node_modules/
+*.tsbuildinfo
+.DS_Store
+.gitignore
+.npmignore
+biome.json
+tsconfig.json
+tsup.config.ts
+PLAN.md
+.ai/
+.claude/
+.github/
