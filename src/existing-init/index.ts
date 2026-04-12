@@ -141,7 +141,7 @@ Rules: 1-3 docs covering major modules, each under 80 lines, with purpose/entry-
 
   const result = spawnSync(
     "claude",
-    ["--model", "claude-sonnet-4-6", "--print", "--no-markdown", prompt],
+    ["--model", "claude-sonnet-4-6", "--print", prompt],
     { encoding: "utf-8", cwd: dir, timeout: 60_000 },
   );
 

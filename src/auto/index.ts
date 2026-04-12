@@ -142,7 +142,7 @@ Start now. When done, output the PR URL on a line by itself prefixed with "PR: "
 async function spawnClaudeSession(prompt: string): Promise<string | null> {
   console.log("  Spawning Claude Code session…");
 
-  const result = spawnSync("claude", ["--print", "--no-markdown", prompt], {
+  const result = spawnSync("claude", ["--print", prompt], {
     encoding: "utf-8",
     cwd: process.cwd(),
     timeout: 30 * 60 * 1000, // 30 minute timeout
