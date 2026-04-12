@@ -25,7 +25,6 @@ interface AutoOptions {
 
 const CI_POLL_INTERVAL_MS = 15_000;
 const CI_MAX_AUTO_FIX_ATTEMPTS = 3;
-const CI_MAX_POLL_ATTEMPTS = 80; // 80 × 15s = 20 minutes
 
 // ─── Git helpers ─────────────────────────────────────────────────────────────
 
@@ -193,16 +192,8 @@ async function getCiStatus(prUrl: string): Promise<CiStatus> {
       conclusion: string | null;
     }>;
 
-    if (checks.length === 0) return { state: "success", failedChecks: [] };
-
-    const pending = checks.filter(
-      (c) => c.state === "PENDING" || c.state === "QUEUED" || c.state === "IN_PROGRESS",
-    );
-    const failed = checks.filter(
-      (c) =>
-        c.state === "COMPLETED" &&
-        (c.conclusion === "FAILURE" || c.conclusion === "TIMED_OUT"),
-    );
+    const pending = checks.filter((c) => c.state === "PENDING" || c.state === "QUEUED");
+    const failed = checks.filter((c) => c.conclusion === "FAILURE" || c.conclusion === "TIMED_OUT");
 
     if (pending.length > 0) return { state: "pending", failedChecks: [] };
     if (failed.length > 0) {
@@ -277,7 +268,7 @@ async function monitorAndWait(prUrl: string, ticket: LinearTicket): Promise<bool
   gh("pr", "comment", prUrl, "--body", "🤖 CI checks running — will notify when ready for review.");
 
   // Poll CI
-  for (let pollAttempt = 0; pollAttempt < CI_MAX_POLL_ATTEMPTS; pollAttempt++) {
+  for (;;) {
     await sleep(CI_POLL_INTERVAL_MS);
     const status = await getCiStatus(prUrl);
 
@@ -317,9 +308,6 @@ async function monitorAndWait(prUrl: string, ticket: LinearTicket): Promise<bool
     console.log(`  Auto-fix attempt ${fixAttempts}/${CI_MAX_AUTO_FIX_ATTEMPTS}…`);
     await autoFixCi(prUrl, ticket, status.failedChecks);
   }
-
-  console.log(`\n  CI monitoring timed out after ${CI_MAX_POLL_ATTEMPTS * CI_POLL_INTERVAL_MS / 60_000} minutes.`);
-  console.log(`  Review CI status manually: ${prUrl}`);
 
   // Wait for merge
   const merged = await waitForMerge(prUrl);
