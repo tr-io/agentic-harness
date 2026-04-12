@@ -9,8 +9,7 @@ const command = input?.tool_input?.command ?? "";
 if (tool !== "Bash" || !command.includes("git commit")) process.exit(0);
 
 const diff = spawnSync("git", ["diff-tree", "--no-commit-id", "-r", "--name-only", "HEAD"], {
-  encoding: "utf-8",
-  stdio: ["pipe", "pipe", "pipe"],
+  encoding: "utf-8", stdio: ["pipe", "pipe", "pipe"],
 });
 if (diff.status !== 0) process.exit(0);
 
@@ -21,17 +20,13 @@ try {
   if (existsSync(".ai/manifest.json")) {
     manifest = JSON.parse(readFileSync(".ai/manifest.json", "utf-8"));
   }
-} catch {
-  process.exit(0);
-}
+} catch { process.exit(0); }
 
 const stale = [];
 for (const mapping of manifest.mappings ?? []) {
   const { sourcePaths = [], docs = [] } = mapping;
   const prefix = (p) => p.replace("/**", "").replace("/*", "");
-  const sourceChanged = sourcePaths.some((pat) =>
-    changedFiles.some((f) => f.startsWith(prefix(pat))),
-  );
+  const sourceChanged = sourcePaths.some((pat) => changedFiles.some((f) => f.startsWith(prefix(pat))));
   if (!sourceChanged) continue;
   const docChanged = docs.some((doc) => changedFiles.includes(doc));
   if (!docChanged) stale.push(...docs);

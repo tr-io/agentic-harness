@@ -1,6 +1,6 @@
 # Architecture Decision Records
 
-This directory records architectural decisions made during development of **.**.
+This directory records architectural decisions made during development of **agentic-harness**.
 
 ## Format (Nygard)
 

@@ -16,6 +16,7 @@ import { scaffold } from "../scaffolder/index.js";
 interface InitOptions {
   dryRun?: boolean;
   interactive?: boolean;
+  force?: boolean;
 }
 
 function isGreenfield(dir: string): boolean {
@@ -155,9 +156,12 @@ export async function runInit(options: InitOptions): Promise<void> {
   const cwd = process.cwd();
   const interactive = options.interactive !== false;
   const dryRun = Boolean(options.dryRun);
+  const force = Boolean(options.force);
 
-  if (existsSync(join(cwd, ".harness.json")) && !dryRun) {
-    console.log("⚠  .harness.json already exists. Run harness upgrade to update.");
+  if (existsSync(join(cwd, ".harness.json")) && !dryRun && !force) {
+    console.log(
+      "⚠  .harness.json already exists. Run harness upgrade to update, or harness init --force to re-scaffold.",
+    );
     return;
   }
 

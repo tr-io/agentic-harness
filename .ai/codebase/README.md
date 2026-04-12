@@ -1,6 +1,6 @@
 # Codebase Navigation
 
-This directory contains navigation maps for the **.** codebase.
+This directory contains navigation maps for the **agentic-harness** codebase.
 Add one file per major module or subsystem.
 
 ## Convention

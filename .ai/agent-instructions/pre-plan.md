@@ -11,8 +11,8 @@ Branch names must follow the convention:
 ```
 
 Examples:
-- `team-42-add-user-auth`
-- `team-17-fix-login-redirect`
+- `tri, the project is https://linear.app/triobox/project/agentic-harness-e3c80386917a/overview-42-add-user-auth`
+- `tri, the project is https://linear.app/triobox/project/agentic-harness-e3c80386917a/overview-17-fix-login-redirect`
 - `feature/add-logging` (fallback when no ticket exists)
 
 Create the branch:

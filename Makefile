@@ -47,10 +47,10 @@ _release-guard:
 _release-finish:
 	$(eval V := $(shell node -p "require('./package.json').version"))
 	npm run build
-	rm -f tr-io-harness-*.tgz
+	git rm -f tr-io-harness-*.tgz 2>/dev/null || true
 	npm pack
 	sed -i '' 's|tr-io-harness-[0-9]*\.[0-9]*\.[0-9]*\.tgz|tr-io-harness-$(V).tgz|g' README.md
-	git add dist/ tr-io-harness-$(V).tgz package.json package-lock.json README.md
+	git add tr-io-harness-$(V).tgz package.json package-lock.json README.md
 	git commit -m "release: v$(V)"
 	git tag v$(V)
 	@echo ""
