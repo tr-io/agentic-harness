@@ -34,6 +34,38 @@ function deepMerge<T extends object>(base: T, override: Partial<T>): T {
   return result;
 }
 
+/**
+ * Migration shim: if a loaded config has top-level `linear` but no `integrations.linear`,
+ * copy it across and emit a deprecation warning. Never breaks existing installs.
+ */
+function migrateTopLevelLinear(raw: Record<string, unknown>): Record<string, unknown> {
+  if (!("linear" in raw)) return raw;
+
+  const hasIntegrationsLinear =
+    raw.integrations !== undefined &&
+    typeof raw.integrations === "object" &&
+    raw.integrations !== null &&
+    "linear" in (raw.integrations as Record<string, unknown>);
+
+  if (hasIntegrationsLinear) return raw;
+
+  // Perform migration
+  console.warn(
+    "[harness] Deprecation warning: top-level `linear` in .harness.json is deprecated. " +
+      "Please move it to `integrations.linear`. This will be removed in a future version.",
+  );
+
+  const migrated = { ...raw };
+  const existingIntegrations =
+    typeof raw.integrations === "object" && raw.integrations !== null ? raw.integrations : {};
+  migrated.integrations = {
+    ...(existingIntegrations as Record<string, unknown>),
+    linear: raw.linear,
+  };
+  // Leave top-level linear in place so deep merge still works without breaking anything
+  return migrated;
+}
+
 function validate(raw: unknown, filePath: string): asserts raw is Partial<HarnessConfig> {
   if (typeof raw !== "object" || raw === null || Array.isArray(raw)) {
     throw new HarnessConfigError(`${filePath}: must be a JSON object`);
@@ -58,6 +90,13 @@ function validate(raw: unknown, filePath: string): asserts raw is Partial<Harnes
   if (obj.hooks !== undefined && (typeof obj.hooks !== "object" || Array.isArray(obj.hooks))) {
     throw new HarnessConfigError(`${filePath}: "hooks" must be an object`);
   }
+  if (
+    obj.integrations !== undefined &&
+    (typeof obj.integrations !== "object" || Array.isArray(obj.integrations))
+  ) {
+    throw new HarnessConfigError(`${filePath}: "integrations" must be an object`);
+  }
+  // Legacy top-level linear validation (kept for backwards compat during migration)
   if (obj.linear !== undefined && (typeof obj.linear !== "object" || Array.isArray(obj.linear))) {
     throw new HarnessConfigError(`${filePath}: "linear" must be an object`);
   }
@@ -82,7 +121,11 @@ export function loadConfig(projectDir: string): HarnessConfig {
   }
 
   validate(raw, filePath);
-  return deepMerge(CONFIG_DEFAULTS, raw);
+
+  // Apply migration shim before merging with defaults
+  const migrated = migrateTopLevelLinear(raw as Record<string, unknown>);
+
+  return deepMerge(CONFIG_DEFAULTS, migrated as Partial<HarnessConfig>);
 }
 
 export function loadConfigOrNull(projectDir: string): HarnessConfig | null {

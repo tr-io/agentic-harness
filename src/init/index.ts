@@ -107,9 +107,11 @@ function buildConfig(answers: Record<string, unknown>, stack: StackReport): Harn
       typeCheckCommand: String(answers.typeCheckCommand ?? ""),
       buildCommand: String(answers.buildCommand ?? ""),
     },
-    linear: {
-      enabled: Boolean(answers.linearEnabled),
-      teamKey: String(answers.linearTeamKey ?? ""),
+    integrations: {
+      linear: {
+        enabled: Boolean(answers.linearEnabled),
+        teamKey: String(answers.linearTeamKey ?? ""),
+      },
     },
     features: CONFIG_DEFAULTS.features,
     hooks: CONFIG_DEFAULTS.hooks,

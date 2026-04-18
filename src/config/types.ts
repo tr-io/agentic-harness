@@ -4,7 +4,7 @@ export interface HarnessConfig {
   $schema?: string;
   version: string;
   project: ProjectConfig;
-  linear: LinearConfig;
+  integrations: IntegrationsConfig;
   features: FeaturesConfig;
   hooks: HooksConfig;
 }
@@ -18,6 +18,10 @@ export interface ProjectConfig {
   lintCommand: string;
   typeCheckCommand: string;
   buildCommand: string;
+}
+
+export interface IntegrationsConfig {
+  linear: LinearConfig;
 }
 
 export interface LinearConfig {

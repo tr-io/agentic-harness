@@ -30,8 +30,8 @@ function buildContext(config: HarnessConfig, stack: StackReport): TemplateContex
     lintCommand: config.project.lintCommand,
     typeCheckCommand: config.project.typeCheckCommand,
     buildCommand: config.project.buildCommand,
-    linearEnabled: config.linear.enabled,
-    linearTeamKey: config.linear.teamKey,
+    linearEnabled: config.integrations.linear.enabled,
+    linearTeamKey: config.integrations.linear.teamKey,
     features: config.features,
   };
 }
