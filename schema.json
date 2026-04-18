@@ -53,9 +53,29 @@
         }
       }
     },
+    "integrations": {
+      "type": "object",
+      "description": "Integration configurations for external services",
+      "properties": {
+        "linear": {
+          "type": "object",
+          "description": "Linear issue tracker integration",
+          "properties": {
+            "enabled": { "type": "boolean", "default": false },
+            "teamKey": { "type": "string", "description": "Linear team key (e.g. \"TRI\")" },
+            "projectId": {
+              "type": "string",
+              "description": "Optional Linear project ID to scope operations"
+            }
+          }
+        }
+      },
+      "additionalProperties": false
+    },
     "linear": {
       "type": "object",
-      "description": "Linear issue tracker integration",
+      "description": "DEPRECATED: use integrations.linear instead. Kept for backwards compatibility.",
+      "deprecated": true,
       "properties": {
         "enabled": { "type": "boolean", "default": false },
         "teamKey": { "type": "string", "description": "Linear team key (e.g. \"TRI\")" },
@@ -128,6 +148,23 @@
           "type": "boolean",
           "default": false,
           "description": "Enable keel structural code enforcement"
+        },
+        "skills": {
+          "type": "object",
+          "description": "Claude Code skills to scaffold into .claude/skills/. All opt-in (false by default).",
+          "properties": {
+            "addTicket": {
+              "type": "boolean",
+              "default": false,
+              "description": "Scaffold the /add-ticket skill for creating Linear tickets from conversation context"
+            },
+            "build": {
+              "type": "boolean",
+              "default": false,
+              "description": "Scaffold the /build skill for guided feature implementation"
+            }
+          },
+          "additionalProperties": false
         }
       },
       "additionalProperties": false

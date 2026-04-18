@@ -133,7 +133,31 @@ export async function runCheck(): Promise<void> {
       }
     }
 
-    // 6. Commands configured
+    // 6. Skill files (if enabled)
+    if (config.features.skills) {
+      const skillChecks: Array<[string, string]> = [
+        [".claude/skills/add-ticket.md", "skills.addTicket"],
+        [".claude/skills/build.md", "skills.build"],
+      ];
+      const skillEnabled: Record<string, boolean> = {
+        "skills.addTicket": config.features.skills.addTicket,
+        "skills.build": config.features.skills.build,
+      };
+      for (const [rel, feature] of skillChecks) {
+        if (skillEnabled[feature]) {
+          const skillPath = join(cwd, rel);
+          if (!existsSync(skillPath)) {
+            results.push(
+              fail(rel, `Feature ${feature} enabled but skill file missing — run harness init`),
+            );
+          } else {
+            results.push(pass(rel));
+          }
+        }
+      }
+    }
+
+    // 7. Commands configured
     const commands: Array<[string, string]> = [
       [config.project.testCommand, "testCommand"],
       [config.project.lintCommand, "lintCommand"],

@@ -1,7 +1,7 @@
 import { mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { afterEach, beforeEach, describe, expect, it } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { CONFIG_DEFAULTS } from "../defaults.js";
 import { HarnessConfigError, loadConfig, loadConfigOrNull } from "../loader.js";
 
@@ -13,6 +13,7 @@ beforeEach(() => {
 
 afterEach(() => {
   rmSync(dir, { recursive: true, force: true });
+  vi.restoreAllMocks();
 });
 
 function writeConfig(content: unknown) {
@@ -50,7 +51,7 @@ describe("loadConfig", () => {
     expect(config.features.dddContextMaps).toBe(false);
     expect(config.features.autoLoop).toBe(false);
     expect(config.hooks.prePush.lint).toBe(true);
-    expect(config.linear.enabled).toBe(false);
+    expect(config.integrations.linear.enabled).toBe(false);
   });
 
   it("overrides defaults with provided values", () => {
@@ -75,12 +76,53 @@ describe("loadConfig", () => {
     expect(config.project.stacks).toEqual([]); // default
   });
 
-  it("reads linear config correctly", () => {
+  it("reads integrations.linear config correctly", () => {
+    writeConfig({
+      integrations: { linear: { enabled: true, teamKey: "TRI", projectId: "abc-123" } },
+    });
+    const config = loadConfig(dir);
+    expect(config.integrations.linear.enabled).toBe(true);
+    expect(config.integrations.linear.teamKey).toBe("TRI");
+    expect(config.integrations.linear.projectId).toBe("abc-123");
+  });
+});
+
+describe("loadConfig migration shim", () => {
+  it("migrates top-level linear to integrations.linear", () => {
+    const warnSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
     writeConfig({ linear: { enabled: true, teamKey: "TRI", projectId: "abc-123" } });
     const config = loadConfig(dir);
-    expect(config.linear.enabled).toBe(true);
-    expect(config.linear.teamKey).toBe("TRI");
-    expect(config.linear.projectId).toBe("abc-123");
+    expect(config.integrations.linear.enabled).toBe(true);
+    expect(config.integrations.linear.teamKey).toBe("TRI");
+    expect(config.integrations.linear.projectId).toBe("abc-123");
+    expect(warnSpy).toHaveBeenCalledWith(expect.stringContaining("Deprecation warning"));
+    expect(warnSpy).toHaveBeenCalledWith(expect.stringContaining("integrations.linear"));
+  });
+
+  it("does not emit warning when integrations.linear is present", () => {
+    const warnSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
+    writeConfig({ integrations: { linear: { enabled: true, teamKey: "TRI" } } });
+    loadConfig(dir);
+    expect(warnSpy).not.toHaveBeenCalled();
+  });
+
+  it("prefers integrations.linear over top-level linear when both present", () => {
+    const warnSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
+    writeConfig({
+      linear: { enabled: true, teamKey: "OLD" },
+      integrations: { linear: { enabled: false, teamKey: "NEW" } },
+    });
+    const config = loadConfig(dir);
+    // integrations.linear wins — no migration should occur
+    expect(config.integrations.linear.teamKey).toBe("NEW");
+    expect(warnSpy).not.toHaveBeenCalled();
+  });
+
+  it("does not emit warning when there is no linear config at all", () => {
+    const warnSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
+    writeConfig({});
+    loadConfig(dir);
+    expect(warnSpy).not.toHaveBeenCalled();
   });
 });
 
@@ -125,5 +167,10 @@ describe("CONFIG_DEFAULTS", () => {
     expect(CONFIG_DEFAULTS.hooks.prePush.lint).toBe(true);
     expect(CONFIG_DEFAULTS.hooks.prePush.typeCheck).toBe(true);
     expect(CONFIG_DEFAULTS.hooks.prePush.unitTest).toBe(true);
+  });
+
+  it("has integrations.linear disabled by default", () => {
+    expect(CONFIG_DEFAULTS.integrations.linear.enabled).toBe(false);
+    expect(CONFIG_DEFAULTS.integrations.linear.teamKey).toBe("");
   });
 });

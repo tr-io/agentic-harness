@@ -11,9 +11,11 @@
     "typeCheckCommand": "npx tsc --noEmit",
     "buildCommand": "npm run build"
   },
-  "linear": {
-    "enabled": true,
-    "teamKey": "TRI, the project is https://linear.app/triobox/project/agentic-harness-e3c80386917a/overview"
+  "integrations": {
+    "linear": {
+      "enabled": true,
+      "teamKey": "TRI, the project is https://linear.app/triobox/project/agentic-harness-e3c80386917a/overview"
+    }
   },
   "features": {
     "adr": true,
@@ -26,7 +28,7 @@
     "dddContextMaps": false,
     "latMd": false,
     "evaluatorQA": false,
-    "autoLoop": false,
+    "autoLoop": true,
     "keelEnforcement": false
   },
   "hooks": {

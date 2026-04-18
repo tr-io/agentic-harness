@@ -12,9 +12,11 @@ export const CONFIG_DEFAULTS: HarnessConfig = {
     typeCheckCommand: "",
     buildCommand: "",
   },
-  linear: {
-    enabled: false,
-    teamKey: "",
+  integrations: {
+    linear: {
+      enabled: false,
+      teamKey: "",
+    },
   },
   features: {
     // Recommended: on by default
@@ -31,6 +33,11 @@ export const CONFIG_DEFAULTS: HarnessConfig = {
     evaluatorQA: false,
     autoLoop: false,
     keelEnforcement: false,
+    // Skills: opt-in
+    skills: {
+      addTicket: false,
+      build: false,
+    },
   },
   hooks: {
     prePush: {

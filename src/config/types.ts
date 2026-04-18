@@ -4,7 +4,7 @@ export interface HarnessConfig {
   $schema?: string;
   version: string;
   project: ProjectConfig;
-  linear: LinearConfig;
+  integrations: IntegrationsConfig;
   features: FeaturesConfig;
   hooks: HooksConfig;
 }
@@ -20,10 +20,19 @@ export interface ProjectConfig {
   buildCommand: string;
 }
 
+export interface IntegrationsConfig {
+  linear: LinearConfig;
+}
+
 export interface LinearConfig {
   enabled: boolean;
   teamKey: string;
   projectId?: string;
+}
+
+export interface SkillsConfig {
+  addTicket: boolean;
+  build: boolean;
 }
 
 export interface FeaturesConfig {
@@ -41,6 +50,8 @@ export interface FeaturesConfig {
   evaluatorQA: boolean;
   autoLoop: boolean;
   keelEnforcement: boolean;
+  // Skills (false by default — opt-in)
+  skills: SkillsConfig;
 }
 
 export interface HooksConfig {
