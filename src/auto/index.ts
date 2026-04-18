@@ -26,16 +26,39 @@ interface AutoOptions {
 const CI_POLL_INTERVAL_MS = 15_000;
 const CI_MAX_AUTO_FIX_ATTEMPTS = 3;
 const CI_MAX_POLL_ATTEMPTS = 80; // 80 × 15s = 20 minutes
+// After autoFixCi pushes a commit, wait for GitHub to register the new run
+const CI_POST_FIX_RESET_MS = 30_000;
+// Timeout for gh/git subprocess calls (30s — network-bound)
+const GH_GIT_TIMEOUT_MS = 30_000;
 
 // ─── Git helpers ─────────────────────────────────────────────────────────────
 
 function git(...args: string[]): { stdout: string; status: number } {
-  const r = spawnSync("git", args, { encoding: "utf-8", cwd: process.cwd() });
+  const r = spawnSync("git", args, {
+    encoding: "utf-8",
+    cwd: process.cwd(),
+    timeout: GH_GIT_TIMEOUT_MS,
+  });
+  if (r.error) {
+    const code = (r.error as NodeJS.ErrnoException).code;
+    if (code === "ENOENT") console.error("  git not found — is it installed and on PATH?");
+    else if (code === "ETIMEDOUT") console.error("  git command timed out");
+  }
   return { stdout: r.stdout?.trim() ?? "", status: r.status ?? 1 };
 }
 
 function gh(...args: string[]): { stdout: string; status: number } {
-  const r = spawnSync("gh", args, { encoding: "utf-8", cwd: process.cwd() });
+  const r = spawnSync("gh", args, {
+    encoding: "utf-8",
+    cwd: process.cwd(),
+    timeout: GH_GIT_TIMEOUT_MS,
+  });
+  if (r.error) {
+    const code = (r.error as NodeJS.ErrnoException).code;
+    if (code === "ENOENT")
+      console.error("  gh not found — install the GitHub CLI: https://cli.github.com");
+    else if (code === "ETIMEDOUT") console.error("  gh command timed out");
+  }
   return { stdout: r.stdout?.trim() ?? "", status: r.status ?? 1 };
 }
 
@@ -90,19 +113,26 @@ async function handleComplexity(ticket: LinearTicket): Promise<LinearTicket> {
     created.push(sub);
   }
 
+  if (created.length === 0) {
+    console.warn("  ⚠ No sub-tickets created — proceeding with original ticket");
+    return ticket;
+  }
+
   return created[0]; // Work on first sub-ticket
 }
 
 // ─── Session spawning ─────────────────────────────────────────────────────────
 
 function buildBranchName(ticket: LinearTicket): string {
-  const id = ticket.identifier.toLowerCase().replace("-", "-");
+  const id = ticket.identifier.toLowerCase();
   const slug = ticket.title
     .toLowerCase()
     .replace(/[^a-z0-9\s-]/g, "")
     .trim()
     .replace(/\s+/g, "-")
-    .slice(0, 40);
+    .replace(/-+/g, "-") // collapse consecutive dashes
+    .slice(0, 40)
+    .replace(/-$/, ""); // strip trailing dash after slice
   return `${id}-${slug}`;
 }
 
@@ -154,8 +184,22 @@ async function spawnClaudeSession(prompt: string): Promise<string | null> {
     },
   );
 
+  if (result.error) {
+    const code = (result.error as NodeJS.ErrnoException).code;
+    if (code === "ENOENT") {
+      console.error(
+        "  claude not found — is Claude Code installed? (npm install -g @anthropic-ai/claude-code)",
+      );
+    } else if (code === "ETIMEDOUT") {
+      console.error("  Claude session timed out after 30 minutes");
+    } else {
+      console.error(`  Claude session error: ${result.error.message}`);
+    }
+    return null;
+  }
+
   if (result.status !== 0) {
-    console.error("  Claude session failed or timed out");
+    console.error("  Claude session exited with non-zero status");
     if (result.stdout) {
       console.error("\n  Session output (last 2000 chars):");
       console.error(result.stdout.slice(-2000));
@@ -163,10 +207,10 @@ async function spawnClaudeSession(prompt: string): Promise<string | null> {
     return null;
   }
 
-  // Extract PR URL from output
-  const prMatch = result.stdout?.match(/^PR:\s*(https?:\/\/\S+)/m);
+  // Extract PR URL — match anywhere on a line (not just line-start)
+  const prMatch = result.stdout?.match(/PR:\s*(https?:\/\/\S+)/m);
   if (!prMatch) {
-    console.error("\n  Session output (last 2000 chars):");
+    console.error("\n  No PR URL found in session output. Last 2000 chars:");
     console.error(result.stdout?.slice(-2000));
   }
   return prMatch?.[1] ?? null;
@@ -193,7 +237,8 @@ async function getCiStatus(prUrl: string): Promise<CiStatus> {
       conclusion: string | null;
     }>;
 
-    if (checks.length === 0) return { state: "success", failedChecks: [] };
+    // No checks registered yet — CI hasn't started, treat as pending
+    if (checks.length === 0) return { state: "pending", failedChecks: [] };
 
     const pending = checks.filter(
       (c) => c.state === "PENDING" || c.state === "QUEUED" || c.state === "IN_PROGRESS",
@@ -208,18 +253,46 @@ async function getCiStatus(prUrl: string): Promise<CiStatus> {
       return { state: "failure", failedChecks: failed.map((c) => c.name) };
     }
     return { state: "success", failedChecks: [] };
-  } catch {
+  } catch (err) {
+    console.error(`  Warning: could not parse CI check response: ${err}`);
     return { state: "pending", failedChecks: [] };
   }
 }
 
 async function getFailureLogs(prUrl: string, failedChecks: string[]): Promise<string> {
+  // Resolve the most recent failed run ID for this PR
+  const runsResult = gh("run", "list", "--json", "databaseId,status,conclusion", "--limit", "5");
+
+  let runId: string | null = null;
+  if (runsResult.status === 0) {
+    try {
+      const runs = JSON.parse(runsResult.stdout) as Array<{
+        databaseId: number;
+        status: string;
+        conclusion: string | null;
+      }>;
+      const failedRun = runs.find(
+        (r) =>
+          r.status === "completed" && (r.conclusion === "failure" || r.conclusion === "timed_out"),
+      );
+      if (failedRun) runId = String(failedRun.databaseId);
+    } catch {
+      /* fall through to fallback */
+    }
+  }
+
+  if (!runId) {
+    return `CI failed (checks: ${failedChecks.join(", ")}) — run \`gh run list\` to find the failed run and inspect logs manually.`;
+  }
+
   const logs: string[] = [];
   for (const check of failedChecks.slice(0, 2)) {
-    const result = gh("run", "view", "--log-failed", "--json", "jobs");
-    if (result.status === 0) logs.push(`## ${check}\n${result.stdout.slice(0, 2000)}`);
+    const result = gh("run", "view", runId, "--log-failed");
+    if (result.status === 0) {
+      logs.push(`## ${check}\n${result.stdout.slice(0, 2000)}`);
+    }
   }
-  return logs.join("\n\n") || "CI failed — check the PR for details.";
+  return logs.join("\n\n") || `CI failed — check run ${runId} for details.`;
 }
 
 async function autoFixCi(
@@ -251,6 +324,12 @@ Do NOT create a new branch. Do NOT open a new PR. Just fix the failures and push
     },
   );
 
+  if (result.error) {
+    const code = (result.error as NodeJS.ErrnoException).code;
+    console.error(`  Auto-fix session error (${code ?? "unknown"}): ${result.error.message}`);
+    return false;
+  }
+
   return result.status === 0;
 }
 
@@ -260,8 +339,17 @@ async function waitForMerge(prUrl: string): Promise<boolean> {
   for (let attempt = 0; attempt < 120; attempt++) {
     await sleep(CI_POLL_INTERVAL_MS);
     const result = gh("pr", "view", prUrl, "--json", "state", "--jq", ".state");
+
+    if (result.status !== 0) {
+      console.error(`  Warning: could not check PR state (attempt ${attempt + 1}/120)`);
+      continue;
+    }
+
     if (result.stdout === "MERGED") return true;
-    if (result.stdout === "CLOSED") return false;
+    if (result.stdout === "CLOSED") {
+      console.log("  PR was closed without merging");
+      return false;
+    }
   }
 
   console.log("  Timed out waiting for merge (30 minutes)");
@@ -316,7 +404,12 @@ async function monitorAndWait(prUrl: string, ticket: LinearTicket): Promise<bool
 
     fixAttempts++;
     console.log(`  Auto-fix attempt ${fixAttempts}/${CI_MAX_AUTO_FIX_ATTEMPTS}…`);
-    await autoFixCi(prUrl, ticket, status.failedChecks);
+    const fixed = await autoFixCi(prUrl, ticket, status.failedChecks);
+    if (fixed) {
+      // Give GitHub time to register the new push and start fresh CI runs
+      console.log(`  Waiting ${CI_POST_FIX_RESET_MS / 1000}s for new CI to start…`);
+      await sleep(CI_POST_FIX_RESET_MS);
+    }
   }
 
   if (!ciPassed) {
@@ -343,7 +436,11 @@ export async function runAuto(ticketId: string, options: AutoOptions): Promise<v
   }
 
   const config = loadConfigOrNull(cwd);
-  if (!config?.features.autoLoop) {
+  if (!config) {
+    console.error('.harness.json is invalid or unreadable. Run "harness check" to diagnose.');
+    process.exit(1);
+  }
+  if (!config.features.autoLoop) {
     console.error(
       'Auto loop is disabled. Enable it in .harness.json: "features": { "autoLoop": true }',
     );
