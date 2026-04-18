@@ -77,6 +77,25 @@ export async function runCheck(): Promise<void> {
     checkFile(cwd, ".claude/hooks/pre-push-check.js", ".claude/hooks/pre-push-check.js"),
   );
 
+  // 2b. Mandatory .ai/ subdirectories and topic docs (new structure)
+  const mandatoryAiDocs: Array<[string, string]> = [
+    [".ai/design-docs/README.md", ".ai/design-docs/README.md"],
+    [".ai/exec-plans/README.md", ".ai/exec-plans/README.md"],
+    [".ai/generated/README.md", ".ai/generated/README.md"],
+    [".ai/product-specs/README.md", ".ai/product-specs/README.md"],
+    [".ai/references/README.md", ".ai/references/README.md"],
+    [".ai/ARCHITECTURE.md", ".ai/ARCHITECTURE.md"],
+    [".ai/DESIGN.md", ".ai/DESIGN.md"],
+    [".ai/PLANS.md", ".ai/PLANS.md"],
+    [".ai/PRODUCT_SENSE.md", ".ai/PRODUCT_SENSE.md"],
+    [".ai/QUALITY_SCORE.md", ".ai/QUALITY_SCORE.md"],
+    [".ai/RELIABILITY.md", ".ai/RELIABILITY.md"],
+    [".ai/SECURITY.md", ".ai/SECURITY.md"],
+  ];
+  for (const [rel, label] of mandatoryAiDocs) {
+    results.push(checkFile(cwd, rel, label));
+  }
+
   // 3. CLAUDE.md line count
   const claudeMdPath = join(cwd, "CLAUDE.md");
   if (existsSync(claudeMdPath)) {
