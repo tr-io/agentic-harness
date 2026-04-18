@@ -6,6 +6,18 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
+// Mock analyzeCodebaseWithSubAgent so tests don't spawn real claude processes
+vi.mock("../existing-init/index.js", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("../existing-init/index.js")>();
+  return {
+    ...actual,
+    analyzeCodebaseWithSubAgent: vi.fn().mockReturnValue({
+      codebases: { "overview.md": "# Overview\n" },
+      manifestMappings: [{ sourcePaths: ["src/**"], docs: [".ai/codebase/overview.md"] }],
+    }),
+  };
+});
+
 // Mock inquirer so interactive commands don't block
 vi.mock("inquirer", () => ({
   default: {
