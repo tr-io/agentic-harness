@@ -148,6 +148,23 @@
           "type": "boolean",
           "default": false,
           "description": "Enable keel structural code enforcement"
+        },
+        "skills": {
+          "type": "object",
+          "description": "Claude Code skills to scaffold into .claude/skills/. All opt-in (false by default).",
+          "properties": {
+            "addTicket": {
+              "type": "boolean",
+              "default": false,
+              "description": "Scaffold the /add-ticket skill for creating Linear tickets from conversation context"
+            },
+            "build": {
+              "type": "boolean",
+              "default": false,
+              "description": "Scaffold the /build skill for guided feature implementation"
+            }
+          },
+          "additionalProperties": false
         }
       },
       "additionalProperties": false
