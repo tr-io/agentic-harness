@@ -139,11 +139,11 @@ Generate a JSON response (ONLY JSON, no other text):
 }
 Rules: 1-3 docs covering major modules, each under 80 lines, with purpose/entry-points/abstractions/constraints.`;
 
-  const result = spawnSync(
-    "claude",
-    ["--model", "claude-sonnet-4-6", "--print", prompt],
-    { encoding: "utf-8", cwd: dir, timeout: 60_000 },
-  );
+  const result = spawnSync("claude", ["--model", "claude-sonnet-4-6", "--print", prompt], {
+    encoding: "utf-8",
+    cwd: dir,
+    timeout: 60_000,
+  });
 
   if (result.status !== 0 || !result.stdout?.trim()) {
     return fallbackOutput(stack);
