@@ -200,8 +200,7 @@ async function getCiStatus(prUrl: string): Promise<CiStatus> {
     );
     const failed = checks.filter(
       (c) =>
-        c.state === "COMPLETED" &&
-        (c.conclusion === "FAILURE" || c.conclusion === "TIMED_OUT"),
+        c.state === "COMPLETED" && (c.conclusion === "FAILURE" || c.conclusion === "TIMED_OUT"),
     );
 
     if (pending.length > 0) return { state: "pending", failedChecks: [] };
@@ -318,7 +317,9 @@ async function monitorAndWait(prUrl: string, ticket: LinearTicket): Promise<bool
     await autoFixCi(prUrl, ticket, status.failedChecks);
   }
 
-  console.log(`\n  CI monitoring timed out after ${CI_MAX_POLL_ATTEMPTS * CI_POLL_INTERVAL_MS / 60_000} minutes.`);
+  console.log(
+    `\n  CI monitoring timed out after ${(CI_MAX_POLL_ATTEMPTS * CI_POLL_INTERVAL_MS) / 60_000} minutes.`,
+  );
   console.log(`  Review CI status manually: ${prUrl}`);
 
   // Wait for merge
