@@ -13,8 +13,9 @@ vi.mock("../existing-init/index.js", async (importOriginal) => {
   return {
     ...actual,
     analyzeCodebaseWithSubAgent: vi.fn().mockReturnValue({
+      architectureOverview: "# Architecture Overview\n",
       codebases: { "overview.md": "# Overview\n" },
-      manifestMappings: [{ sourcePaths: ["src/**"], docs: [".ai/codebase/overview.md"] }],
+      manifestMappings: [{ sourcePaths: ["src/**"], docs: [".ai/generated/overview.md"] }],
     }),
   };
 });
@@ -89,6 +90,18 @@ describe("harness init (non-interactive)", () => {
       ".ai/agent-instructions/pre-plan.md",
       ".ai/agent-instructions/pre-push.md",
       ".ai/codebase/README.md",
+      ".ai/design-docs/README.md",
+      ".ai/exec-plans/README.md",
+      ".ai/generated/README.md",
+      ".ai/product-specs/README.md",
+      ".ai/references/README.md",
+      ".ai/ARCHITECTURE.md",
+      ".ai/DESIGN.md",
+      ".ai/PLANS.md",
+      ".ai/PRODUCT_SENSE.md",
+      ".ai/QUALITY_SCORE.md",
+      ".ai/RELIABILITY.md",
+      ".ai/SECURITY.md",
       ".ai/manifest.json",
       ".claude/settings.json",
       ".claude/hooks/pre-push-check.js",
@@ -96,6 +109,18 @@ describe("harness init (non-interactive)", () => {
     for (const path of mandatory) {
       expect(existsSync(join(dir, path)), `Missing: ${path}`).toBe(true);
     }
+  });
+
+  it("creates exec-plans subdirectory placeholders", async () => {
+    await runInit();
+    expect(existsSync(join(dir, ".ai/exec-plans/active/.gitkeep"))).toBe(true);
+    expect(existsSync(join(dir, ".ai/exec-plans/completed/.gitkeep"))).toBe(true);
+  });
+
+  it("does not create FRONTEND.md for non-frontend project types", async () => {
+    // Non-interactive init uses the detected stack type (library for the test dir)
+    await runInit();
+    expect(existsSync(join(dir, ".ai/FRONTEND.md"))).toBe(false);
   });
 
   it("creates recommended artifacts (enabled by default)", async () => {
