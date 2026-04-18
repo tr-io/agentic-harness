@@ -271,6 +271,7 @@ async function waitForMerge(prUrl: string): Promise<boolean> {
 async function monitorAndWait(prUrl: string, ticket: LinearTicket): Promise<boolean> {
   console.log(`\n  Monitoring CI for ${prUrl}`);
   let fixAttempts = 0;
+  let ciPassed = false;
 
   // Add "waiting for review" comment
   gh("pr", "comment", prUrl, "--body", "🤖 CI checks running — will notify when ready for review.");
@@ -294,6 +295,7 @@ async function monitorAndWait(prUrl: string, ticket: LinearTicket): Promise<bool
         "--body",
         "✅ CI passed — ready for review. Waiting for approval.\n\n_Automated by @tr-io/harness_",
       );
+      ciPassed = true;
       break;
     }
 
@@ -317,10 +319,13 @@ async function monitorAndWait(prUrl: string, ticket: LinearTicket): Promise<bool
     await autoFixCi(prUrl, ticket, status.failedChecks);
   }
 
-  console.log(
-    `\n  CI monitoring timed out after ${(CI_MAX_POLL_ATTEMPTS * CI_POLL_INTERVAL_MS) / 60_000} minutes.`,
-  );
-  console.log(`  Review CI status manually: ${prUrl}`);
+  if (!ciPassed) {
+    console.log(
+      `\n  CI monitoring timed out after ${(CI_MAX_POLL_ATTEMPTS * CI_POLL_INTERVAL_MS) / 60_000} minutes.`,
+    );
+    console.log(`  Review CI status manually: ${prUrl}`);
+    return false;
+  }
 
   // Wait for merge
   const merged = await waitForMerge(prUrl);
