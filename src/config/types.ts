@@ -30,6 +30,11 @@ export interface LinearConfig {
   projectId?: string;
 }
 
+export interface SkillsConfig {
+  addTicket: boolean;
+  build: boolean;
+}
+
 export interface FeaturesConfig {
   // Recommended (true by default)
   adr: boolean;
@@ -45,6 +50,8 @@ export interface FeaturesConfig {
   evaluatorQA: boolean;
   autoLoop: boolean;
   keelEnforcement: boolean;
+  // Skills (false by default — opt-in)
+  skills: SkillsConfig;
 }
 
 export interface HooksConfig {

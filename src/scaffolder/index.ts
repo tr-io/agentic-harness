@@ -17,6 +17,8 @@ import { sessionProtocol } from "./templates/mandatory/session-protocol.js";
 import { dddReadme } from "./templates/optional/ddd-readme.js";
 import { adrReadme } from "./templates/recommended/adr-readme.js";
 import { testingConventions } from "./templates/recommended/testing-conventions.js";
+import { addTicketSkill } from "./templates/skills/add-ticket.js";
+import { buildSkill } from "./templates/skills/build.js";
 import type { ScaffoldResult, ScaffoldedFile, TemplateContext } from "./types.js";
 
 export type { TemplateContext, ScaffoldedFile, ScaffoldResult };
@@ -112,9 +114,30 @@ function optional(ctx: TemplateContext): ScaffoldedFile[] {
   return files;
 }
 
+function skills(ctx: TemplateContext): ScaffoldedFile[] {
+  const files: ScaffoldedFile[] = [];
+
+  if (ctx.features.skills.addTicket) {
+    files.push({
+      path: ".claude/skills/add-ticket.md",
+      content: addTicketSkill(ctx),
+      tier: "optional",
+    });
+  }
+  if (ctx.features.skills.build) {
+    files.push({
+      path: ".claude/skills/build.md",
+      content: buildSkill(ctx),
+      tier: "optional",
+    });
+  }
+
+  return files;
+}
+
 export function buildFileList(config: HarnessConfig, stack: StackReport): ScaffoldedFile[] {
   const ctx = buildContext(config, stack);
-  return [...mandatory(ctx), ...recommended(ctx), ...optional(ctx)];
+  return [...mandatory(ctx), ...recommended(ctx), ...optional(ctx), ...skills(ctx)];
 }
 
 export function scaffold(
