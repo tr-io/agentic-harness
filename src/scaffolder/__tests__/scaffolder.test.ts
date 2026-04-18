@@ -155,6 +155,14 @@ describe("template content", () => {
     expect(lines).toBeLessThanOrEqual(100);
   });
 
+  it("CLAUDE.md contains Agent Documentation TOC with .ai/ tree", () => {
+    const files = buildFileList(baseConfig, baseStack);
+    const claudeMd = files.find((f) => f.path === "CLAUDE.md");
+    expect(claudeMd?.content).toContain("## Agent Documentation");
+    expect(claudeMd?.content).toContain(".ai/");
+    expect(claudeMd?.content).toContain("agent-instructions/");
+  });
+
   it("session-protocol contains all 6 lifecycle steps", () => {
     const files = buildFileList(baseConfig, baseStack);
     const protocol = files.find((f) => f.path === ".ai/agent-instructions/session-protocol.md");

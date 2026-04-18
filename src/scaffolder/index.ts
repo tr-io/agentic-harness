@@ -39,20 +39,46 @@ function buildContext(config: HarnessConfig, stack: StackReport): TemplateContex
 }
 
 function mandatory(ctx: TemplateContext): ScaffoldedFile[] {
-  const files: ScaffoldedFile[] = [
-    { path: "CLAUDE.md", content: claudeMd(ctx), tier: "mandatory" },
-    { path: ".ai/README.md", content: aiReadme(ctx), tier: "mandatory" },
+  return [
+    {
+      path: ".ai/README.md",
+      content: aiReadme(ctx),
+      tier: "mandatory",
+      description: "index of all agent context docs",
+    },
     {
       path: ".ai/agent-instructions/session-protocol.md",
       content: sessionProtocol(ctx),
       tier: "mandatory",
+      description: "session protocol, pre-plan workflow, pre-push checklist",
     },
-    { path: ".ai/agent-instructions/pre-plan.md", content: prePlan(ctx), tier: "mandatory" },
-    { path: ".ai/agent-instructions/pre-push.md", content: prePush(ctx), tier: "mandatory" },
-    { path: ".ai/codebase/README.md", content: codebaseReadme(ctx), tier: "mandatory" },
-    { path: ".ai/manifest.json", content: aiManifest(), tier: "mandatory" },
-    { path: ".claude/settings.json", content: claudeSettings(ctx), tier: "mandatory" },
-    // Hook scripts
+    {
+      path: ".ai/agent-instructions/pre-plan.md",
+      content: prePlan(ctx),
+      tier: "mandatory",
+    },
+    {
+      path: ".ai/agent-instructions/pre-push.md",
+      content: prePush(ctx),
+      tier: "mandatory",
+    },
+    {
+      path: ".ai/codebase/README.md",
+      content: codebaseReadme(ctx),
+      tier: "mandatory",
+      description: "codebase navigation maps",
+    },
+    {
+      path: ".ai/manifest.json",
+      content: aiManifest(),
+      tier: "mandatory",
+      description: "documentation index",
+    },
+    {
+      path: ".claude/settings.json",
+      content: claudeSettings(ctx),
+      tier: "mandatory",
+    },
     {
       path: ".claude/hooks/pre-push-check.js",
       content: prePushCheckScript(),
@@ -60,20 +86,25 @@ function mandatory(ctx: TemplateContext): ScaffoldedFile[] {
       tier: "mandatory",
     },
   ];
-  return files;
 }
 
 function recommended(ctx: TemplateContext): ScaffoldedFile[] {
   const files: ScaffoldedFile[] = [];
 
   if (ctx.features.adr) {
-    files.push({ path: ".ai/adr/README.md", content: adrReadme(ctx), tier: "recommended" });
+    files.push({
+      path: ".ai/adr/README.md",
+      content: adrReadme(ctx),
+      tier: "recommended",
+      description: "architecture decision records",
+    });
   }
   if (ctx.features.testingDocs) {
     files.push({
       path: ".ai/testing/conventions.md",
       content: testingConventions(ctx),
       tier: "recommended",
+      description: "testing conventions",
     });
   }
   if (ctx.features.branchNamingWarning) {
@@ -108,7 +139,12 @@ function optional(ctx: TemplateContext): ScaffoldedFile[] {
   const files: ScaffoldedFile[] = [];
 
   if (ctx.features.dddContextMaps) {
-    files.push({ path: ".ai/ddd/README.md", content: dddReadme(ctx), tier: "optional" });
+    files.push({
+      path: ".ai/ddd/README.md",
+      content: dddReadme(ctx),
+      tier: "optional",
+      description: "domain-driven design context maps",
+    });
   }
 
   return files;
@@ -137,7 +173,14 @@ function skills(ctx: TemplateContext): ScaffoldedFile[] {
 
 export function buildFileList(config: HarnessConfig, stack: StackReport): ScaffoldedFile[] {
   const ctx = buildContext(config, stack);
-  return [...mandatory(ctx), ...recommended(ctx), ...optional(ctx), ...skills(ctx)];
+  const rest = [...mandatory(ctx), ...recommended(ctx), ...optional(ctx), ...skills(ctx)];
+  const claudeMdFile: ScaffoldedFile = {
+    path: "CLAUDE.md",
+    content: claudeMd(ctx, rest),
+    tier: "mandatory",
+    description: "project entry point and agent documentation index",
+  };
+  return [claudeMdFile, ...rest];
 }
 
 export function scaffold(
