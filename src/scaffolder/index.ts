@@ -177,6 +177,8 @@ function mandatory(ctx: TemplateContext): ScaffoldedFile[] {
       content: claudeSettings(ctx),
       tier: "mandatory",
     },
+    // TODO(TRI-75): Skip scaffolding hook JS files when the plugin is installed —
+    // hooks are bundled in the plugin at hooks/scripts/ and would fire twice.
     {
       path: ".claude/hooks/pre-push-check.js",
       content: prePushCheckScript(),
