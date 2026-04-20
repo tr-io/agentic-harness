@@ -1,5 +1,8 @@
 import type { TemplateContext } from "../../types.js";
 
+// TODO(TRI-75): When the harness plugin is installed (detect via enabledPlugins in settings),
+// skip writing hooks to .claude/settings.json — the plugin already provides them via hooks/hooks.json,
+// and duplicating them causes each hook to fire twice per event.
 export function claudeSettings(ctx: TemplateContext): string {
   const hooks: Record<string, unknown[] | undefined> = {
     PreToolUse: [
