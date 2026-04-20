@@ -132,3 +132,184 @@ describe("runCheck — missing new TRI-62 mandatory docs", () => {
     });
   }
 });
+
+// ─── CLAUDE.md line count ─────────────────────────────────────────────────────
+
+describe("runCheck — CLAUDE.md line count", () => {
+  it("passes when CLAUDE.md is <=100 lines", async () => {
+    writeHarnessJson();
+    for (const f of MANDATORY_FILES) {
+      if (f !== "CLAUDE.md") touch(f);
+    }
+    touch("CLAUDE.md", Array(50).fill("line").join("\n"));
+    await expect(check()).resolves.not.toThrow();
+    expect(exitSpy).not.toHaveBeenCalled();
+  });
+
+  it("warns (no exit) when CLAUDE.md exceeds 100 lines", async () => {
+    const warnSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
+    writeHarnessJson();
+    for (const f of MANDATORY_FILES) {
+      if (f !== "CLAUDE.md") touch(f);
+    }
+    touch("CLAUDE.md", Array(150).fill("line").join("\n"));
+    await expect(check()).resolves.not.toThrow();
+    expect(exitSpy).not.toHaveBeenCalled();
+    warnSpy.mockRestore();
+  });
+});
+
+// ─── Recommended artifact warnings ───────────────────────────────────────────
+
+function writeHarnessJsonWithFeatures(features: Record<string, unknown>): void {
+  touch(
+    ".harness.json",
+    JSON.stringify({
+      version: "0.1.0",
+      project: {
+        name: "test",
+        type: "cli",
+        stacks: [],
+        testCommand: "npm test",
+        lintCommand: "npm run lint",
+        typeCheckCommand: "npx tsc --noEmit",
+        buildCommand: "npm run build",
+      },
+      features: {
+        adr: false,
+        testingDocs: false,
+        branchNamingWarning: false,
+        completionReminder: false,
+        artifactFreshnessCheck: false,
+        dddContextMaps: false,
+        skills: { addTicket: false, build: false },
+        linearIntegration: false,
+        ...features,
+      },
+      hooks: {},
+      integrations: { linear: { enabled: false, teamKey: "" } },
+    }),
+  );
+}
+
+describe("runCheck — recommended artifact warnings", () => {
+  it("warns (no exit) when adr enabled but .ai/adr/README.md missing", async () => {
+    writeHarnessJsonWithFeatures({ adr: true });
+    for (const f of MANDATORY_FILES) touch(f);
+    // do not create .ai/adr/README.md
+    await expect(check()).resolves.not.toThrow();
+    expect(exitSpy).not.toHaveBeenCalled();
+  });
+
+  it("warns (no exit) when testingDocs enabled but .ai/testing/conventions.md missing", async () => {
+    writeHarnessJsonWithFeatures({ testingDocs: true });
+    for (const f of MANDATORY_FILES) touch(f);
+    await expect(check()).resolves.not.toThrow();
+    expect(exitSpy).not.toHaveBeenCalled();
+  });
+});
+
+// ─── Hook script warnings ─────────────────────────────────────────────────────
+
+describe("runCheck — hook script warnings", () => {
+  it("warns (no exit) when branchNamingWarning enabled but hook missing", async () => {
+    writeHarnessJsonWithFeatures({ branchNamingWarning: true });
+    for (const f of MANDATORY_FILES) touch(f);
+    await expect(check()).resolves.not.toThrow();
+    expect(exitSpy).not.toHaveBeenCalled();
+  });
+
+  it("warns (no exit) when completionReminder enabled but hook missing", async () => {
+    writeHarnessJsonWithFeatures({ completionReminder: true });
+    for (const f of MANDATORY_FILES) touch(f);
+    await expect(check()).resolves.not.toThrow();
+    expect(exitSpy).not.toHaveBeenCalled();
+  });
+
+  it("warns (no exit) when artifactFreshnessCheck enabled but hook missing", async () => {
+    writeHarnessJsonWithFeatures({ artifactFreshnessCheck: true });
+    for (const f of MANDATORY_FILES) touch(f);
+    await expect(check()).resolves.not.toThrow();
+    expect(exitSpy).not.toHaveBeenCalled();
+  });
+});
+
+// ─── Skill file failures ──────────────────────────────────────────────────────
+
+describe("runCheck — skill file failures", () => {
+  it("exits with 1 when skills.addTicket enabled but .claude/skills/add-ticket.md missing", async () => {
+    writeHarnessJsonWithFeatures({ skills: { addTicket: true, build: false } });
+    for (const f of MANDATORY_FILES) touch(f);
+    await expect(check()).rejects.toThrow("process.exit(1)");
+  });
+});
+
+// ─── Command configuration warnings ──────────────────────────────────────────
+
+describe("runCheck — command configuration warnings", () => {
+  it("warns (no exit) when testCommand is empty", async () => {
+    touch(
+      ".harness.json",
+      JSON.stringify({
+        version: "0.1.0",
+        project: {
+          name: "test",
+          type: "cli",
+          stacks: [],
+          testCommand: "",
+          lintCommand: "npm run lint",
+          typeCheckCommand: "",
+          buildCommand: "",
+        },
+        features: {
+          adr: false,
+          testingDocs: false,
+          branchNamingWarning: false,
+          completionReminder: false,
+          artifactFreshnessCheck: false,
+          dddContextMaps: false,
+          skills: { addTicket: false, build: false },
+          linearIntegration: false,
+        },
+        hooks: {},
+        integrations: { linear: { enabled: false, teamKey: "" } },
+      }),
+    );
+    for (const f of MANDATORY_FILES) touch(f);
+    await expect(check()).resolves.not.toThrow();
+    expect(exitSpy).not.toHaveBeenCalled();
+  });
+
+  it("warns (no exit) when lintCommand is empty", async () => {
+    touch(
+      ".harness.json",
+      JSON.stringify({
+        version: "0.1.0",
+        project: {
+          name: "test",
+          type: "cli",
+          stacks: [],
+          testCommand: "npm test",
+          lintCommand: "",
+          typeCheckCommand: "",
+          buildCommand: "",
+        },
+        features: {
+          adr: false,
+          testingDocs: false,
+          branchNamingWarning: false,
+          completionReminder: false,
+          artifactFreshnessCheck: false,
+          dddContextMaps: false,
+          skills: { addTicket: false, build: false },
+          linearIntegration: false,
+        },
+        hooks: {},
+        integrations: { linear: { enabled: false, teamKey: "" } },
+      }),
+    );
+    for (const f of MANDATORY_FILES) touch(f);
+    await expect(check()).resolves.not.toThrow();
+    expect(exitSpy).not.toHaveBeenCalled();
+  });
+});

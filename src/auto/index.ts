@@ -78,7 +78,8 @@ async function handleComplexity(ticket: LinearTicket): Promise<LinearTicket> {
 
 // ─── Session spawning ─────────────────────────────────────────────────────────
 
-function buildBranchName(ticket: LinearTicket): string {
+/** @internal */
+export function buildBranchName(ticket: LinearTicket): string {
   const id = ticket.identifier.toLowerCase();
   const slug = ticket.title
     .toLowerCase()
@@ -91,7 +92,12 @@ function buildBranchName(ticket: LinearTicket): string {
   return `${id}-${slug}`;
 }
 
-function buildSessionPrompt(ticket: LinearTicket, branchName: string, simplify: boolean): string {
+/** @internal */
+export function buildSessionPrompt(
+  ticket: LinearTicket,
+  branchName: string,
+  simplify: boolean,
+): string {
   const ticketCtx = formatTicketContext(ticket);
   return `You are implementing a Linear ticket as part of the @tr-io/harness automated workflow.
 
