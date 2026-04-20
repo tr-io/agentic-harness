@@ -244,4 +244,41 @@ describe("template content", () => {
     expect(prePushHook?.content).toContain("spawnSync");
     expect(prePushHook?.content).not.toContain("execSync");
   });
+
+  it("CLAUDE.md TOC contains all new .ai/ subdirectory entries", () => {
+    const files = buildFileList(baseConfig, baseStack);
+    const claudeMd = files.find((f) => f.path === "CLAUDE.md");
+    const content = claudeMd?.content ?? "";
+    for (const subdir of [
+      "design-docs/",
+      "exec-plans/",
+      "generated/",
+      "product-specs/",
+      "references/",
+    ]) {
+      expect(content, `Missing subdirectory entry: ${subdir}`).toContain(subdir);
+    }
+  });
+
+  it("CLAUDE.md TOC contains topic-level .ai/ docs", () => {
+    const files = buildFileList(baseConfig, baseStack);
+    const claudeMd = files.find((f) => f.path === "CLAUDE.md");
+    const content = claudeMd?.content ?? "";
+    for (const doc of [
+      "ARCHITECTURE.md",
+      "DESIGN.md",
+      "PLANS.md",
+      "SECURITY.md",
+      "RELIABILITY.md",
+      "QUALITY_SCORE.md",
+    ]) {
+      expect(content, `Missing topic doc: ${doc}`).toContain(doc);
+    }
+  });
+
+  it("CLAUDE.md TOC entries include one-line descriptions", () => {
+    const files = buildFileList(baseConfig, baseStack);
+    const claudeMd = files.find((f) => f.path === "CLAUDE.md");
+    expect(claudeMd?.content).toContain("←");
+  });
 });
