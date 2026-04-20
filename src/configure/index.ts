@@ -8,11 +8,13 @@ interface ConfigureOptions {
   section?: string;
 }
 
-function featureName(description: string): string {
+/** @internal */
+export function featureName(description: string): string {
   return description.split(" — ")[0];
 }
 
-function getEnabledKeys(features: FeaturesConfig): string[] {
+/** @internal */
+export function getEnabledKeys(features: FeaturesConfig): string[] {
   const enabled: string[] = [];
   for (const key of Object.keys(FEATURE_METADATA)) {
     if (key === "skills") {
@@ -25,7 +27,8 @@ function getEnabledKeys(features: FeaturesConfig): string[] {
   return enabled;
 }
 
-function applySelectedFeatures(config: HarnessConfig, selected: string[]): HarnessConfig {
+/** @internal */
+export function applySelectedFeatures(config: HarnessConfig, selected: string[]): HarnessConfig {
   const skillsWasEnabled = config.features.skills.addTicket || config.features.skills.build;
   const skillsNowEnabled = selected.includes("skills");
 

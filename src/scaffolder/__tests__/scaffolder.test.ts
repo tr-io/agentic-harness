@@ -282,3 +282,165 @@ describe("template content", () => {
     expect(claudeMd?.content).toContain("←");
   });
 });
+
+describe("template content — non-empty", () => {
+  it("every template produces non-empty content", () => {
+    const config: HarnessConfig = {
+      ...baseConfig,
+      features: {
+        ...baseConfig.features,
+        dddContextMaps: true,
+        skills: { addTicket: true, build: true },
+      },
+    };
+    const files = buildFileList(config, baseStack);
+    for (const f of files) {
+      if (f.path.endsWith(".gitkeep")) continue;
+      expect(f.content.length, `${f.path} must have non-empty content`).toBeGreaterThan(0);
+    }
+  });
+
+  it("all hook scripts are non-empty JavaScript files with a shebang or process reference", () => {
+    const files = buildFileList(baseConfig, baseStack);
+    const hookFiles = files.filter((f) => f.path.startsWith(".claude/hooks/"));
+    expect(hookFiles.length).toBeGreaterThan(0);
+    for (const f of hookFiles) {
+      const isJs =
+        f.content.includes("process.exit") ||
+        f.content.includes("spawnSync") ||
+        f.content.includes("#!/usr/bin/env node") ||
+        f.content.includes("import ");
+      expect(isJs, `${f.path} must be recognisable JavaScript`).toBe(true);
+    }
+  });
+});
+
+describe("skills file inclusion", () => {
+  it("includes add-ticket.md and build.md when skills enabled", () => {
+    const config: HarnessConfig = {
+      ...baseConfig,
+      features: { ...baseConfig.features, skills: { addTicket: true, build: true } },
+    };
+    const files = buildFileList(config, baseStack);
+    const paths = files.map((f) => f.path);
+    expect(paths).toContain(".claude/skills/add-ticket.md");
+    expect(paths).toContain(".claude/skills/build.md");
+  });
+
+  it("excludes skill files when skills disabled", () => {
+    const config: HarnessConfig = {
+      ...baseConfig,
+      features: { ...baseConfig.features, skills: { addTicket: false, build: false } },
+    };
+    const files = buildFileList(config, baseStack);
+    const paths = files.map((f) => f.path);
+    expect(paths).not.toContain(".claude/skills/add-ticket.md");
+    expect(paths).not.toContain(".claude/skills/build.md");
+  });
+
+  it("add-ticket.md content mentions ticket or Linear", () => {
+    const config: HarnessConfig = {
+      ...baseConfig,
+      features: { ...baseConfig.features, skills: { addTicket: true, build: false } },
+    };
+    const files = buildFileList(config, baseStack);
+    const skill = files.find((f) => f.path === ".claude/skills/add-ticket.md");
+    const content = skill?.content ?? "";
+    expect(
+      content.toLowerCase().includes("ticket") || content.toLowerCase().includes("linear"),
+    ).toBe(true);
+  });
+
+  it("build.md content mentions build", () => {
+    const config: HarnessConfig = {
+      ...baseConfig,
+      features: { ...baseConfig.features, skills: { addTicket: false, build: true } },
+    };
+    const files = buildFileList(config, baseStack);
+    const skill = files.find((f) => f.path === ".claude/skills/build.md");
+    expect(skill?.content.toLowerCase()).toContain("build");
+  });
+});
+
+describe("feature toggle combinations", () => {
+  it("all features enabled: includes ADR, testing, DDD, hooks, skills", () => {
+    const config: HarnessConfig = {
+      ...baseConfig,
+      features: {
+        ...baseConfig.features,
+        adr: true,
+        testingDocs: true,
+        dddContextMaps: true,
+        branchNamingWarning: true,
+        completionReminder: true,
+        artifactFreshnessCheck: true,
+        skills: { addTicket: true, build: true },
+      },
+    };
+    const paths = buildFileList(config, baseStack).map((f) => f.path);
+    expect(paths).toContain(".ai/adr/README.md");
+    expect(paths).toContain(".ai/testing/conventions.md");
+    expect(paths).toContain(".ai/ddd/README.md");
+    expect(paths).toContain(".claude/hooks/branch-naming-warn.js");
+    expect(paths).toContain(".claude/hooks/completion-reminder.js");
+    expect(paths).toContain(".claude/hooks/artifact-freshness.js");
+    expect(paths).toContain(".claude/skills/add-ticket.md");
+    expect(paths).toContain(".claude/skills/build.md");
+  });
+
+  it("all features disabled: only mandatory files present", () => {
+    const config: HarnessConfig = {
+      ...baseConfig,
+      features: {
+        adr: false,
+        testingDocs: false,
+        linterBootstrap: false,
+        linearIntegration: false,
+        dddContextMaps: false,
+        latMd: false,
+        evaluatorQA: false,
+        branchNamingWarning: false,
+        artifactFreshnessCheck: false,
+        autoLoop: false,
+        keelEnforcement: false,
+        completionReminder: false,
+        skills: { addTicket: false, build: false },
+      },
+    };
+    const files = buildFileList(config, baseStack);
+    const paths = files.map((f) => f.path);
+    expect(paths).not.toContain(".ai/adr/README.md");
+    expect(paths).not.toContain(".ai/testing/conventions.md");
+    expect(paths).not.toContain(".ai/ddd/README.md");
+    expect(paths).not.toContain(".claude/hooks/branch-naming-warn.js");
+    expect(paths).not.toContain(".claude/skills/add-ticket.md");
+    // Mandatory files still present
+    expect(paths).toContain("CLAUDE.md");
+    expect(paths).toContain(".ai/manifest.json");
+  });
+
+  it("only dddContextMaps enabled: includes DDD but no recommended hooks", () => {
+    const config: HarnessConfig = {
+      ...baseConfig,
+      features: {
+        adr: false,
+        testingDocs: false,
+        linterBootstrap: false,
+        linearIntegration: false,
+        dddContextMaps: true,
+        latMd: false,
+        evaluatorQA: false,
+        branchNamingWarning: false,
+        artifactFreshnessCheck: false,
+        autoLoop: false,
+        keelEnforcement: false,
+        completionReminder: false,
+        skills: { addTicket: false, build: false },
+      },
+    };
+    const paths = buildFileList(config, baseStack).map((f) => f.path);
+    expect(paths).toContain(".ai/ddd/README.md");
+    expect(paths).not.toContain(".ai/adr/README.md");
+    expect(paths).not.toContain(".claude/hooks/branch-naming-warn.js");
+  });
+});

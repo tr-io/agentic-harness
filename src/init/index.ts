@@ -19,7 +19,8 @@ interface InitOptions {
   force?: boolean;
 }
 
-function isGreenfield(dir: string): boolean {
+/** @internal */
+export function isGreenfield(dir: string): boolean {
   return (
     !existsSync(join(dir, "src")) &&
     !existsSync(join(dir, "package.json")) &&
@@ -78,7 +79,8 @@ async function promptUser(stack: StackReport): Promise<HarnessConfig> {
   return buildConfig(answers, stack);
 }
 
-function defaultsFromStack(stack: StackReport): HarnessConfig {
+/** @internal */
+export function defaultsFromStack(stack: StackReport): HarnessConfig {
   return buildConfig(
     {
       name: stack.entryPoints[0]?.split("/")[0] || "my-project",
@@ -94,7 +96,8 @@ function defaultsFromStack(stack: StackReport): HarnessConfig {
   );
 }
 
-function buildConfig(answers: Record<string, unknown>, stack: StackReport): HarnessConfig {
+/** @internal */
+export function buildConfig(answers: Record<string, unknown>, stack: StackReport): HarnessConfig {
   return {
     ...CONFIG_DEFAULTS,
     project: {
@@ -118,7 +121,8 @@ function buildConfig(answers: Record<string, unknown>, stack: StackReport): Harn
   };
 }
 
-function guessTestCommand(stack: StackReport): string {
+/** @internal */
+export function guessTestCommand(stack: StackReport): string {
   const map: Record<string, string> = {
     vitest: "npm test",
     jest: "npm test",
@@ -129,7 +133,8 @@ function guessTestCommand(stack: StackReport): string {
   return stack.testFramework ? (map[stack.testFramework] ?? "") : "";
 }
 
-function guessLintCommand(stack: StackReport): string {
+/** @internal */
+export function guessLintCommand(stack: StackReport): string {
   if (stack.existingLinters.includes("biome")) return "npx biome check .";
   if (stack.existingLinters.includes("eslint")) return "npx eslint .";
   if (stack.existingLinters.includes("ruff")) return "ruff check .";

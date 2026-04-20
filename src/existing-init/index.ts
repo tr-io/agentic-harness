@@ -64,7 +64,8 @@ export function mergeClaudeSettings(
 }
 
 /** Gather directory tree for sub-agent context (token-efficient: structure only) */
-function gatherDirectoryTree(dir: string, maxDepth = 3, prefix = ""): string {
+/** @internal */
+export function gatherDirectoryTree(dir: string, maxDepth = 3, prefix = ""): string {
   const lines: string[] = [];
   let entries: string[] = [];
   try {
@@ -97,7 +98,8 @@ function gatherDirectoryTree(dir: string, maxDepth = 3, prefix = ""): string {
   return lines.join("\n");
 }
 
-function readFileHeader(filePath: string, lines = 30): string {
+/** @internal */
+export function readFileHeader(filePath: string, lines = 30): string {
   try {
     return readFileSync(filePath, "utf-8").split("\n").slice(0, lines).join("\n");
   } catch {
@@ -165,7 +167,8 @@ Rules: architectureOverview under 60 lines; 1-3 codebaseDocs covering major modu
   }
 }
 
-function fallbackOutput(stack: StackReport): SubAgentOutput {
+/** @internal */
+export function fallbackOutput(stack: StackReport): SubAgentOutput {
   return {
     architectureOverview: `# Architecture Overview\n\n**Stack:** ${stack.languages.join(", ")}\n**Type:** ${stack.projectType}\n**Entry points:** ${stack.entryPoints.join(", ") || "unknown"}\n\n> Fill in details about your system's high-level architecture, key components, and constraints.\n`,
     codebases: {
@@ -194,6 +197,7 @@ export function writeSubAgentOutputs(dir: string, outputs: SubAgentOutput): stri
 
   if (outputs.manifestMappings.length > 0) {
     const manifestPath = join(dir, ".ai", "manifest.json");
+    mkdirSync(join(dir, ".ai"), { recursive: true });
     let manifest: { mappings: unknown[]; generatedAt?: string } = { mappings: [] };
     if (existsSync(manifestPath)) {
       try {

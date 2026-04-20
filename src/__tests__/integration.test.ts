@@ -447,3 +447,117 @@ describe("detectExistingConfigs", () => {
     expect(result.ciWorkflow).toBe(true);
   });
 });
+
+// ─── harness upgrade — integration ───────────────────────────────────────────
+
+describe("harness upgrade — integration", () => {
+  it("dry-run shows changed file when CLAUDE.md is modified after init", async () => {
+    const cwd = process.cwd();
+    process.chdir(dir);
+    try {
+      vi.resetModules();
+      const { runInit } = await import("../init/index.js");
+      await runInit({ interactive: false });
+
+      // Overwrite CLAUDE.md with custom content
+      writeFileSync(join(dir, "CLAUDE.md"), "# My Custom Harness\n".repeat(5));
+
+      vi.resetModules();
+      const logMessages: string[] = [];
+      vi.spyOn(console, "log").mockImplementation((...args) => {
+        logMessages.push(args.join(" "));
+      });
+
+      const { runUpgrade } = await import("../upgrade/index.js");
+      await runUpgrade({ dryRun: true });
+
+      const allOutput = logMessages.join("\n");
+      expect(allOutput).toContain("CLAUDE.md");
+    } finally {
+      process.chdir(cwd);
+    }
+  });
+
+  it("dry-run lists new file when mandatory file deleted after init", async () => {
+    const cwd = process.cwd();
+    process.chdir(dir);
+    try {
+      vi.resetModules();
+      const { runInit } = await import("../init/index.js");
+      await runInit({ interactive: false });
+
+      rmSync(join(dir, ".ai/DESIGN.md"), { force: true });
+
+      vi.resetModules();
+      const logMessages: string[] = [];
+      vi.spyOn(console, "log").mockImplementation((...args) => {
+        logMessages.push(args.join(" "));
+      });
+
+      const { runUpgrade } = await import("../upgrade/index.js");
+      await runUpgrade({ dryRun: true });
+
+      const allOutput = logMessages.join("\n");
+      expect(allOutput).toContain(".ai/DESIGN.md");
+    } finally {
+      process.chdir(cwd);
+    }
+  });
+});
+
+// ─── harness check — integration edge cases ──────────────────────────────────
+
+describe("harness check — integration edge cases", () => {
+  it("warns but does not exit when CLAUDE.md exceeds 100 lines", async () => {
+    const cwd = process.cwd();
+    process.chdir(dir);
+    try {
+      vi.resetModules();
+      const { runInit } = await import("../init/index.js");
+      await runInit({ interactive: false });
+
+      // Append lines to make CLAUDE.md exceed 100 lines
+      const existing = readFileSync(join(dir, "CLAUDE.md"), "utf-8");
+      writeFileSync(join(dir, "CLAUDE.md"), `${existing}\n${"extra line\n".repeat(200)}`);
+
+      vi.resetModules();
+      const exitSpy = vi.spyOn(process, "exit").mockImplementation((_code) => {
+        throw new Error(`process.exit(${_code ?? 0})`);
+      });
+      const { runCheck } = await import("../check/index.js");
+      await expect(runCheck()).resolves.not.toThrow();
+      expect(exitSpy).not.toHaveBeenCalled();
+      exitSpy.mockRestore();
+    } finally {
+      process.chdir(cwd);
+    }
+  });
+
+  it("warns but does not exit when recommended file missing and feature enabled", async () => {
+    const cwd = process.cwd();
+    process.chdir(dir);
+    try {
+      vi.resetModules();
+      const { runInit } = await import("../init/index.js");
+      await runInit({ interactive: false });
+
+      // Manually enable adr but remove the adr file
+      const configPath = join(dir, ".harness.json");
+      const config = JSON.parse(readFileSync(configPath, "utf-8"));
+      config.features.adr = true;
+      writeFileSync(configPath, JSON.stringify(config, null, 2));
+      rmSync(join(dir, ".ai/adr/README.md"), { force: true });
+
+      vi.resetModules();
+      const exitSpy = vi.spyOn(process, "exit").mockImplementation((_code) => {
+        throw new Error(`process.exit(${_code ?? 0})`);
+      });
+      const { runCheck } = await import("../check/index.js");
+      await expect(runCheck()).resolves.not.toThrow();
+      expect(exitSpy).not.toHaveBeenCalled();
+      exitSpy.mockRestore();
+    } finally {
+      process.chdir(cwd);
+    }
+  });
+});
