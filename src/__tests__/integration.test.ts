@@ -2,7 +2,15 @@
  * Integration tests — verify harness init + check work end-to-end.
  * These exercise the full pipeline: detect → scaffold → check.
  */
-import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import {
+  existsSync,
+  mkdirSync,
+  mkdtempSync,
+  readFileSync,
+  rmSync,
+  unlinkSync,
+  writeFileSync,
+} from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
@@ -188,6 +196,26 @@ describe("harness init (non-interactive)", () => {
     expect(existsSync(join(dir, ".ai/ddd/README.md"))).toBe(false);
   });
 
+  it("CLAUDE.md TOC contains all new .ai/ subdirectory entries", async () => {
+    await runInit();
+    const content = readFileSync(join(dir, "CLAUDE.md"), "utf-8");
+    for (const subdir of [
+      "design-docs/",
+      "exec-plans/",
+      "generated/",
+      "product-specs/",
+      "references/",
+    ]) {
+      expect(content, `Missing subdirectory entry: ${subdir}`).toContain(subdir);
+    }
+  });
+
+  it("CLAUDE.md TOC entries include one-line descriptions", async () => {
+    await runInit();
+    const content = readFileSync(join(dir, "CLAUDE.md"), "utf-8");
+    expect(content).toContain("←");
+  });
+
   it("does not overwrite if .harness.json already exists", async () => {
     await runInit();
     const firstConfig = readFileSync(join(dir, ".harness.json"), "utf-8");
@@ -239,6 +267,27 @@ describe("harness check after init", () => {
   it("exits without error after a fresh init", async () => {
     // If runCheck throws or calls process.exit(1), the test fails
     await expect(runInitAndCheck()).resolves.not.toThrow();
+  });
+
+  it("exits with 1 when a mandatory new .ai/ doc is removed after init", async () => {
+    const exitSpy = vi.spyOn(process, "exit").mockImplementation((_code) => {
+      throw new Error(`process.exit(${_code ?? 0})`);
+    });
+    const consoleSpy = vi.spyOn(console, "log").mockImplementation(() => {});
+    const cwd = process.cwd();
+    process.chdir(dir);
+    try {
+      const { runInit } = await import("../init/index.js");
+      await runInit({ interactive: false, dryRun: false });
+      unlinkSync(join(dir, ".ai/ARCHITECTURE.md"));
+      vi.resetModules();
+      const { runCheck } = await import("../check/index.js");
+      await expect(runCheck()).rejects.toThrow("process.exit(1)");
+    } finally {
+      process.chdir(cwd);
+      exitSpy.mockRestore();
+      consoleSpy.mockRestore();
+    }
   });
 });
 
