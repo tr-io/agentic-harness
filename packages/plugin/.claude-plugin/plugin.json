@@ -1,0 +1,9 @@
+{
+  "name": "harness",
+  "version": "0.1.0",
+  "description": "Agentic harness for Claude Code — session protocol, skills, and hooks",
+  "author": { "name": "Triobox" },
+  "repository": "https://github.com/triobox/agentic-harness",
+  "license": "MIT",
+  "keywords": ["harness", "agentic", "session-protocol", "linear"]
+}
