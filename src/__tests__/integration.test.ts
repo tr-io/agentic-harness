@@ -145,6 +145,31 @@ describe("harness init (non-interactive)", () => {
     }
   });
 
+  it("generates docs/design-docs/harness-taxonomy.md when adr feature is enabled", async () => {
+    await runInit();
+    expect(existsSync(join(dir, "docs/design-docs/harness-taxonomy.md"))).toBe(true);
+  });
+
+  it("harness-taxonomy.md contains the feature classification table", async () => {
+    await runInit();
+    const content = readFileSync(join(dir, "docs/design-docs/harness-taxonomy.md"), "utf-8");
+    expect(content).toContain("Feedforward");
+    expect(content).toContain("Feedback");
+    expect(content).toContain("Feature Classification Table");
+  });
+
+  it("harness-taxonomy.md references the Fowler article", async () => {
+    await runInit();
+    const content = readFileSync(join(dir, "docs/design-docs/harness-taxonomy.md"), "utf-8");
+    expect(content).toContain("Fowler");
+  });
+
+  it("harness-taxonomy.md references feature-metadata.ts", async () => {
+    await runInit();
+    const content = readFileSync(join(dir, "docs/design-docs/harness-taxonomy.md"), "utf-8");
+    expect(content).toContain("feature-metadata.ts");
+  });
+
   it("CLAUDE.md is ≤100 lines", async () => {
     await runInit();
     const content = readFileSync(join(dir, "CLAUDE.md"), "utf-8");
