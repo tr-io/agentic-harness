@@ -106,6 +106,7 @@ function readFileHeader(filePath: string, lines = 30): string {
 }
 
 interface SubAgentOutput {
+  architectureOverview: string;
   codebases: Record<string, string>;
   manifestMappings: Array<{ sourcePaths: string[]; docs: string[] }>;
 }
@@ -134,10 +135,11 @@ ${keyFiles ? `## Key File Headers\n${keyFiles}` : ""}
 
 Generate a JSON response (ONLY JSON, no other text):
 {
-  "codebaseDocs": { "<filename>.md": "<markdown content for .ai/codebase/<filename>.md>" },
-  "manifestMappings": [{ "sourcePaths": ["src/module/**"], "docs": [".ai/codebase/<filename>.md"] }]
+  "architectureOverview": "<markdown content for .ai/ARCHITECTURE.md — high-level overview: system purpose, key components, data flow, constraints>",
+  "codebaseDocs": { "<filename>.md": "<markdown content for .ai/generated/<filename>.md>" },
+  "manifestMappings": [{ "sourcePaths": ["src/module/**"], "docs": [".ai/generated/<filename>.md"] }]
 }
-Rules: 1-3 docs covering major modules, each under 80 lines, with purpose/entry-points/abstractions/constraints.`;
+Rules: architectureOverview under 60 lines; 1-3 codebaseDocs covering major modules, each under 80 lines, with purpose/entry-points/abstractions/constraints.`;
 
   const result = spawnSync("claude", ["--model", "claude-sonnet-4-6", "--print", prompt], {
     encoding: "utf-8",
@@ -154,6 +156,7 @@ Rules: 1-3 docs covering major modules, each under 80 lines, with purpose/entry-
     if (!jsonMatch) return fallbackOutput(stack);
     const parsed = JSON.parse(jsonMatch[0]);
     return {
+      architectureOverview: parsed.architectureOverview ?? "",
       codebases: parsed.codebaseDocs ?? {},
       manifestMappings: parsed.manifestMappings ?? [],
     };
@@ -164,19 +167,27 @@ Rules: 1-3 docs covering major modules, each under 80 lines, with purpose/entry-
 
 function fallbackOutput(stack: StackReport): SubAgentOutput {
   return {
+    architectureOverview: `# Architecture Overview\n\n**Stack:** ${stack.languages.join(", ")}\n**Type:** ${stack.projectType}\n**Entry points:** ${stack.entryPoints.join(", ") || "unknown"}\n\n> Fill in details about your system's high-level architecture, key components, and constraints.\n`,
     codebases: {
       "overview.md": `# Codebase Overview\n\n**Stack:** ${stack.languages.join(", ")}\n**Type:** ${stack.projectType}\n**Entry points:** ${stack.entryPoints.join(", ") || "unknown"}\n\n> Fill in details about your project structure, key modules, and architectural constraints.\n`,
     },
-    manifestMappings: [{ sourcePaths: ["src/**"], docs: [".ai/codebase/overview.md"] }],
+    manifestMappings: [{ sourcePaths: ["src/**"], docs: [".ai/generated/overview.md"] }],
   };
 }
 
 export function writeSubAgentOutputs(dir: string, outputs: SubAgentOutput): string[] {
   const written: string[] = [];
 
+  if (outputs.architectureOverview) {
+    const archPath = join(dir, ".ai", "ARCHITECTURE.md");
+    mkdirSync(join(dir, ".ai"), { recursive: true });
+    writeFileSync(archPath, outputs.architectureOverview, "utf-8");
+    written.push(relative(dir, archPath));
+  }
+
   for (const [filename, content] of Object.entries(outputs.codebases)) {
-    const path = join(dir, ".ai", "codebase", filename);
-    mkdirSync(join(dir, ".ai", "codebase"), { recursive: true });
+    const path = join(dir, ".ai", "generated", filename);
+    mkdirSync(join(dir, ".ai", "generated"), { recursive: true });
     writeFileSync(path, content as string, "utf-8");
     written.push(relative(dir, path));
   }

@@ -53,9 +53,51 @@ describe("buildFileList", () => {
     expect(paths).toContain(".ai/agent-instructions/pre-plan.md");
     expect(paths).toContain(".ai/agent-instructions/pre-push.md");
     expect(paths).toContain(".ai/codebase/README.md");
+    expect(paths).toContain(".ai/design-docs/README.md");
+    expect(paths).toContain(".ai/exec-plans/README.md");
+    expect(paths).toContain(".ai/exec-plans/active/.gitkeep");
+    expect(paths).toContain(".ai/exec-plans/completed/.gitkeep");
+    expect(paths).toContain(".ai/generated/README.md");
+    expect(paths).toContain(".ai/product-specs/README.md");
+    expect(paths).toContain(".ai/references/README.md");
+    expect(paths).toContain(".ai/ARCHITECTURE.md");
+    expect(paths).toContain(".ai/DESIGN.md");
+    expect(paths).toContain(".ai/PLANS.md");
+    expect(paths).toContain(".ai/PRODUCT_SENSE.md");
+    expect(paths).toContain(".ai/QUALITY_SCORE.md");
+    expect(paths).toContain(".ai/RELIABILITY.md");
+    expect(paths).toContain(".ai/SECURITY.md");
     expect(paths).toContain(".ai/manifest.json");
     expect(paths).toContain(".claude/settings.json");
     expect(paths).toContain(".claude/hooks/pre-push-check.js");
+  });
+
+  it("includes FRONTEND.md for web-app project type", () => {
+    const files = buildFileList(baseConfig, baseStack); // baseStack is web-app
+    const paths = files.map((f) => f.path);
+    expect(paths).toContain(".ai/FRONTEND.md");
+  });
+
+  it("includes FRONTEND.md for mobile project type", () => {
+    const mobileConfig: HarnessConfig = {
+      ...baseConfig,
+      project: { ...baseConfig.project, type: "mobile" },
+    };
+    const mobileStack: StackReport = { ...baseStack, projectType: "mobile" };
+    const files = buildFileList(mobileConfig, mobileStack);
+    const paths = files.map((f) => f.path);
+    expect(paths).toContain(".ai/FRONTEND.md");
+  });
+
+  it("excludes FRONTEND.md for non-frontend project types", () => {
+    const cliConfig: HarnessConfig = {
+      ...baseConfig,
+      project: { ...baseConfig.project, type: "cli" },
+    };
+    const cliStack: StackReport = { ...baseStack, projectType: "cli" };
+    const files = buildFileList(cliConfig, cliStack);
+    const paths = files.map((f) => f.path);
+    expect(paths).not.toContain(".ai/FRONTEND.md");
   });
 
   it("includes recommended files when features enabled (default)", () => {
@@ -155,6 +197,14 @@ describe("template content", () => {
     expect(lines).toBeLessThanOrEqual(100);
   });
 
+  it("CLAUDE.md contains Agent Documentation TOC with .ai/ tree", () => {
+    const files = buildFileList(baseConfig, baseStack);
+    const claudeMd = files.find((f) => f.path === "CLAUDE.md");
+    expect(claudeMd?.content).toContain("## Agent Documentation");
+    expect(claudeMd?.content).toContain(".ai/");
+    expect(claudeMd?.content).toContain("agent-instructions/");
+  });
+
   it("session-protocol contains all 6 lifecycle steps", () => {
     const files = buildFileList(baseConfig, baseStack);
     const protocol = files.find((f) => f.path === ".ai/agent-instructions/session-protocol.md");
@@ -193,5 +243,42 @@ describe("template content", () => {
     const prePushHook = files.find((f) => f.path === ".claude/hooks/pre-push-check.js");
     expect(prePushHook?.content).toContain("spawnSync");
     expect(prePushHook?.content).not.toContain("execSync");
+  });
+
+  it("CLAUDE.md TOC contains all new .ai/ subdirectory entries", () => {
+    const files = buildFileList(baseConfig, baseStack);
+    const claudeMd = files.find((f) => f.path === "CLAUDE.md");
+    const content = claudeMd?.content ?? "";
+    for (const subdir of [
+      "design-docs/",
+      "exec-plans/",
+      "generated/",
+      "product-specs/",
+      "references/",
+    ]) {
+      expect(content, `Missing subdirectory entry: ${subdir}`).toContain(subdir);
+    }
+  });
+
+  it("CLAUDE.md TOC contains topic-level .ai/ docs", () => {
+    const files = buildFileList(baseConfig, baseStack);
+    const claudeMd = files.find((f) => f.path === "CLAUDE.md");
+    const content = claudeMd?.content ?? "";
+    for (const doc of [
+      "ARCHITECTURE.md",
+      "DESIGN.md",
+      "PLANS.md",
+      "SECURITY.md",
+      "RELIABILITY.md",
+      "QUALITY_SCORE.md",
+    ]) {
+      expect(content, `Missing topic doc: ${doc}`).toContain(doc);
+    }
+  });
+
+  it("CLAUDE.md TOC entries include one-line descriptions", () => {
+    const files = buildFileList(baseConfig, baseStack);
+    const claudeMd = files.find((f) => f.path === "CLAUDE.md");
+    expect(claudeMd?.content).toContain("←");
   });
 });

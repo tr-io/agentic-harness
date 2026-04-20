@@ -22,6 +22,8 @@ export interface ScaffoldedFile {
   content: string;
   executable?: boolean;
   tier: TemplateTier;
+  /** One-line description for the CLAUDE.md TOC */
+  description?: string;
 }
 
 export interface ScaffoldResult {
