@@ -3,8 +3,10 @@ import { join } from "node:path";
 import { Command } from "commander";
 import { registerAuto } from "./commands/auto.js";
 import { registerCheck } from "./commands/check.js";
+import { registerConfigure } from "./commands/configure.js";
 import { registerInit } from "./commands/init.js";
 import { registerLintSetup } from "./commands/lint-setup.js";
+import { registerTaxonomy } from "./commands/taxonomy.js";
 import { registerUpgrade } from "./commands/upgrade.js";
 
 // Use inline version string — avoids import.meta.url / __dirname issues
@@ -20,6 +22,8 @@ program
 
 registerInit(program);
 registerCheck(program);
+registerConfigure(program);
+registerTaxonomy(program);
 registerUpgrade(program);
 registerLintSetup(program);
 registerAuto(program);
