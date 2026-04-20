@@ -42,8 +42,4 @@ What new problems are introduced?
 
 ## Index
 
-<!-- Add entries as ADRs are written -->
-<!-- Example: -->
-<!-- - [001](001-use-postgresql.md) — Use PostgreSQL as primary datastore -->
-
-*No decisions recorded yet.*
+- [001](001-harness-as-claude-code-plugin.md) — Harness as a Claude Code plugin (plugin directory architecture)
