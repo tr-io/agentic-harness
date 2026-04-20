@@ -5,6 +5,7 @@
 import { spawnSync } from "node:child_process";
 import { existsSync } from "node:fs";
 import { join } from "node:path";
+import { createInterface } from "node:readline";
 import { loadConfigOrNull } from "../config/loader.js";
 import {
   LinearClientError,
@@ -21,6 +22,16 @@ import type { LinearTicket } from "../linear/index.js";
 
 interface AutoOptions {
   simplify?: boolean;
+}
+
+function confirm(question: string): Promise<boolean> {
+  return new Promise((resolve) => {
+    const rl = createInterface({ input: process.stdin, output: process.stdout });
+    rl.question(question, (answer) => {
+      rl.close();
+      resolve(answer.trim().toLowerCase() === "y");
+    });
+  });
 }
 
 // ─── Complexity check + optional split ───────────────────────────────────────
@@ -40,21 +51,8 @@ async function handleComplexity(ticket: LinearTicket): Promise<LinearTicket> {
   console.log(`\n  Proposed split into ${splits.length} sub-tickets:`);
   splits.forEach((s, i) => console.log(`   ${i + 1}. ${s.title}`));
 
-  const { default: inquirer } = await import("inquirer");
-  // biome-ignore lint/suspicious/noExplicitAny: inquirer v13 prompt() type is overly strict
-  const { action } = await (inquirer.prompt as any)([
-    {
-      type: "list",
-      name: "action",
-      message: "How would you like to proceed?",
-      choices: [
-        { name: "Split into sub-tickets (recommended)", value: "split" },
-        { name: "Proceed with original ticket (I accept the risk)", value: "proceed" },
-      ],
-    },
-  ]);
-
-  if (action === "proceed") return ticket;
+  const split = await confirm("Split into sub-tickets? [y/N] ");
+  if (!split) return ticket;
 
   // Create sub-tickets in Linear
   console.log("\n  Creating sub-tickets…");
