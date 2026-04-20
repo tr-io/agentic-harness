@@ -6,6 +6,7 @@ import { artifactFreshnessScript } from "./hooks/artifact-freshness.js";
 import { branchNamingWarnScript } from "./hooks/branch-naming-warn.js";
 import { completionReminderScript } from "./hooks/completion-reminder.js";
 import { prePushCheckScript } from "./hooks/pre-push-check.js";
+import { harnessTaxonomy } from "./templates/docs/harness-taxonomy.js";
 import { aiManifest } from "./templates/mandatory/ai-manifest.js";
 import { aiReadme } from "./templates/mandatory/ai-readme.js";
 import { architectureMd } from "./templates/mandatory/architecture-md.js";
@@ -205,6 +206,11 @@ function recommended(ctx: TemplateContext): ScaffoldedFile[] {
       content: adrReadme(ctx),
       tier: "recommended",
       description: "architecture decision records",
+    });
+    files.push({
+      path: "docs/design-docs/harness-taxonomy.md",
+      content: harnessTaxonomy(ctx),
+      tier: "recommended",
     });
   }
   if (ctx.features.testingDocs) {

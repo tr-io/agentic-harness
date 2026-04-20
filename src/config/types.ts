@@ -1,5 +1,14 @@
 export type ProjectType = "web-app" | "cli" | "library" | "monorepo" | "mobile";
 
+export type ControlType = "feedforward" | "feedback";
+export type ExecutionType = "computational" | "inferential";
+
+export interface FeatureMetadata {
+  controlType: ControlType;
+  executionType: ExecutionType;
+  description: string;
+}
+
 export interface HarnessConfig {
   $schema?: string;
   version: string;
