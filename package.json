@@ -8,6 +8,7 @@
   },
   "scripts": {
     "build": "tsup",
+    "build:plugin": "npm run build && chmod +x packages/plugin/bin/harness",
     "dev": "tsup --watch",
     "test": "vitest run",
     "test:watch": "vitest",
